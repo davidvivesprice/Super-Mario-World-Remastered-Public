@@ -5,7 +5,6 @@ var active := false
 var selected_index := 0
 var selected_save: Node = null
 @onready var saves = [$SaveContainer/Save1, $SaveContainer/Save2, $SaveContainer/Save3]
-@onready var animations: AnimationPlayer = $Animations
 @onready var arrow: CenterContainer = $Arrow
 
 var can_enter := true
