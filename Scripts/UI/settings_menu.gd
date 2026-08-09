@@ -1,11 +1,23 @@
-extends Level
+extends Node
+# was `extends Level` - nothing used the Level-ness, and LevelClass._enter_tree
+# clobbered GameManager.current_level, which broke the pause menu forever when
+# this scene is opened as an in-game overlay.
 
 var selected_index := 0
 @export var sections: Array[SettingsSection] = []
 var current_section: SettingsSection = null
 
+## true when opened from the in-level pause menu as an overlay: no options
+## music (level music keeps playing), ui_back closes instead of loading the
+## title screen.
+var overlay_mode := false
+signal closed
+
 func _ready() -> void:
-	MusicPlayer.update_song_label("Mario Kart DS - Options Menu", "Fyre150")
+	if overlay_mode:
+		$Music.queue_free()
+	else:
+		MusicPlayer.update_song_label("Mario Kart DS - Options Menu", "Fyre150")
 	await get_tree().process_frame
 	set_starting_values()
 
@@ -31,7 +43,11 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("apply_settings"):
 		apply_settings()
 	if Input.is_action_just_pressed("ui_back"):
-		TransitionManager.transition_to_menu("res://Instances/UI/Menus/title_screen.tscn", self)
+		if overlay_mode:
+			closed.emit()
+			queue_free()
+		else:
+			TransitionManager.transition_to_menu("res://Instances/UI/Menus/title_screen.tscn", self)
 
 func set_starting_values() -> void:
 	for i in sections:

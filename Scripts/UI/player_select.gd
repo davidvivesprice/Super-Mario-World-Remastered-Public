@@ -40,7 +40,7 @@ func _physics_process(delta: float) -> void:
 	all_players_selected = arr.size() >= CoopManager.players_connected
 	confirmation.visible = all_players_selected
 	if all_players_selected:
-		if Input.is_action_just_pressed("ui_accept"):
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("start"):
 			apply()
 
 func apply() -> void:

@@ -1,27 +1,35 @@
 extends Control
 
-@onready var options = [$Box/MarginContainer/Vbox/Label, $Box/MarginContainer/Vbox/Label2, $Box/MarginContainer/Vbox/Label3]
+const SETTINGS_MENU := preload("res://Instances/UI/Menus/settings_menu.tscn")
+
+@onready var options = [$Box/MarginContainer/Vbox/Label, $Box/MarginContainer/Vbox/Label2, $Box/MarginContainer/Vbox/Settings, $Box/MarginContainer/Vbox/Label3]
 @onready var arrow: TextureRect = $Arrow
 
 var selected_index := 0
 
 var can_select := true
 
-var valid_choices := [true, true, true]
+var valid_choices := [true, true, true, true]
 
 var can_quit := false
 var can_restart := false
+var settings_open := false
 
 func _ready() -> void:
 	pass
 
 func _process(delta: float) -> void:
 	visible = GameManager.game_paused
+	if settings_open:
+		# the settings overlay owns the screen and the input; hide the box and
+		# do NOT process nav or the pause toggle until it closes
+		visible = false
+		return
 	if is_instance_valid(GameManager.current_level) == false or is_instance_valid(CoopManager.get_first_any_player()) == false or GameManager.can_pause == false:
 		return
 	can_quit = players_grounded_check()
 	can_restart = players_grounded_check() and more_than_one_life_check()
-	valid_choices[2] = can_quit
+	valid_choices[3] = can_quit
 	valid_choices[1] = can_restart
 	if options[selected_index] != null:
 		arrow.global_position.y = options[selected_index].global_position.y
@@ -97,6 +105,8 @@ func do_option() -> void:
 			TransitionManager.transition_to_level((GameManager.starting_level_path), GameManager.current_level, false)
 			GameManager.game_paused = false
 		2:
+			open_settings()
+		3:
 			MusicPlayer.stop_level_music()
 			GameManager.reset_values()
 			if GameManager.playing_custom_level:
@@ -106,6 +116,24 @@ func do_option() -> void:
 			else:
 				TransitionManager.transition_to_map(GameManager.current_map_path, GameManager.current_level, false)
 			GameManager.game_paused = false
+
+## Opens the settings screen as an overlay while the tree stays paused.
+## In co-op every player's PauseMenu instance fires do_option on the same
+## frame - the GameManager flag makes sure only the first spawns the overlay.
+func open_settings() -> void:
+	if GameManager.settings_overlay_open:
+		can_select = true
+		return
+	GameManager.settings_overlay_open = true
+	settings_open = true
+	var menu = SETTINGS_MENU.instantiate()
+	menu.overlay_mode = true
+	add_child(menu)
+	await menu.closed
+	GameManager.settings_overlay_open = false
+	settings_open = false
+	selected_index = 0
+	can_select = true
 
 const drag_coins := ["res://Resources/Achievements/Completionist/DragCoins/BVDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/CIDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/DPDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/IFDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/SPDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/SRDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/TBDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/VDDragCoin.tres", "res://Resources/Achievements/Completionist/DragCoins/YIDragCoin.tres"]
 

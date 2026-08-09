@@ -31,7 +31,7 @@ func _process(delta: float) -> void:
 		if selected_index >= 0:
 			selected_save = saves[selected_index]
 			arrow.global_position.x = selected_save.global_position.x + 39
-		if Input.is_action_just_pressed("ui_accept"):
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("start"):
 			if Input.is_action_pressed("delete_save") and selected_save.save != null:
 				delete_save()
 			elif selected_index >= 0:

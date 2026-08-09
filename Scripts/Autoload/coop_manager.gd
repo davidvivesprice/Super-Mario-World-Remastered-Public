@@ -262,10 +262,12 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventJoypadButton and event.pressed:
 		var seat := seat_for_device(event.device)
+		# START is excluded: pressing it on an unseated pad should just pause,
+		# not also spawn a surprise player in the same frame
 		if seat == -1:
-			if players_connected < 4 and event.button_index != JOY_BUTTON_BACK:
+			if players_connected < 4 and not event.button_index in [JOY_BUTTON_BACK, JOY_BUTTON_START]:
 				runtime_join(event.device)
-		elif parked_seats.has(seat) and event.button_index != JOY_BUTTON_BACK:
+		elif parked_seats.has(seat) and not event.button_index in [JOY_BUTTON_BACK, JOY_BUTTON_START]:
 			runtime_rejoin(seat)
 	elif event is InputEventKey and event.pressed and not event.echo:
 		# Keyboard can only ever be P1 (only seat 0 has key bindings), so

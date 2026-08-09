@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 	selected_index = wrap(selected_index, 0, campaign_list.size())
 	current_campaign = campaign_list[selected_index]
 	if active:
-		if Input.is_action_just_pressed("ui_accept"):
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("start"):
 			SoundManager.play_ui_sound(SoundManager.coin)
 			GameManager.current_campaign = current_campaign
 			campaign_selected.emit()

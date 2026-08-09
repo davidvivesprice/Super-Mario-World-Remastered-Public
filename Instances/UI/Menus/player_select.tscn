@@ -78,7 +78,7 @@ offset_bottom = 58.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("2_uh84k")
-text = "press Start to confirm"
+text = "A or START = play!"
 horizontal_alignment = 1
 vertical_alignment = 2
 uppercase = true

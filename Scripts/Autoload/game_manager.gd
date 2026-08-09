@@ -76,6 +76,9 @@ var can_close_message := false
 var coin_counter_coins_collected := 0
 
 var game_paused := false
+# single-instance guard for the pause-menu settings overlay (every player's
+# PauseMenu polls the same input; only the first may spawn it)
+var settings_overlay_open := false
 
 var current_level_route: PlayerGhost
 
@@ -220,6 +223,7 @@ func shake_camera(amount := 1.0) -> void:
 	camera_shake += amount
 
 func reset_values() -> void:
+	settings_overlay_open = false
 	run_states = {}
 	speedrun_timer.resume()
 	GameManager.course_clear.cancel_finish()

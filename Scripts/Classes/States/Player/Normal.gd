@@ -77,6 +77,7 @@ const spin_jump_height := 266.25
 const gravity_modifiers := {"Mario": 1, "Luigi": 0.8, "Toad": 1.1, "Toadette": 1.1}
 
 const accel := 5.625   # authentic SMW ground accel (0.09375 px/f^2)
+const run_accel := 8.4375   # 1.5x accel while run held - David's feel fix (2026-08-09 notes); top speeds stay true-SNES 75/135
 const accel_modifiers := {"Mario": 1, "Luigi": 0.7, "Toad": 1, "Toadette": 1}
 const decel := 3.0
 
@@ -364,17 +365,19 @@ func handle_air_movement(delta: float) -> void:
 
 func handle_ground_acceleration() -> void:
 	var target_speed := walk_speed
+	var target_accel := accel
 	if is_on_slope():
 		target_speed = get_slope_speed(walk_slope_speeds)
 	if Input.is_action_pressed(CoopManager.get_player_input_str("run", player.player_id)):
 		target_speed = run_speed
+		target_accel = run_accel
 		if is_on_slope():
 			target_speed = get_slope_speed(run_slope_speeds)
 		if can_sprint:
 			target_speed = sprint_speed
 			if is_on_slope():
 				target_speed = get_slope_speed(sprint_slope_speeds)
-	var target_accel = accel * accel_modifiers[physics_style]
+	target_accel *= accel_modifiers[physics_style]
 	if player.on_ice:
 		target_accel /= ice_mod
 	player.velocity.x = move_toward(player.velocity.x, (target_speed * move_speed_modifiers[physics_style]) * player.input_direction, target_accel)
