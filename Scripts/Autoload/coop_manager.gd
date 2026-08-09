@@ -53,9 +53,38 @@ var game_overed_players := {}
 
 
 @onready var PLAYER_SCENE = load("res://Instances/Prefabs/Player.tscn")
+
+## Actions that exist once per player as "<action>_<player_id>" in the InputMap.
+const PER_PLAYER_ACTIONS: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "spin_jump", "run", "dive"]
+
+## Device id that no real joypad will ever report - used to neutralize a
+## seat's joypad bindings (e.g. a keyboard-only player).
+const NO_DEVICE := 63
+
 func _ready() -> void:
-	for i in Input.get_connected_joypads():
-		print("HI!" + str(Input.get_joy_name(i) + str(i)))
+	# Default P1 to whichever pad is actually connected first, so a lone pad
+	# on any device id (pad slot 1, hot-replug, etc.) always drives player 1.
+	var pads := Input.get_connected_joypads()
+	if pads.size() > 0:
+		assign_device_to_player(0, pads[0])
+
+## Point every joypad binding of player_id's actions at the given device id.
+## This is what makes "press A to join" stick: the InputMap events for
+## jump_N/run_N/... are retargeted from the hardcoded project.godot device
+## to the pad that actually claimed the seat.
+func assign_device_to_player(player_id: int, device: int) -> void:
+	player_device_ids[player_id] = device
+	for base in PER_PLAYER_ACTIONS:
+		var action := base + "_" + str(player_id)
+		if not InputMap.has_action(action):
+			continue
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
+				ev.device = device
+
+## Neutralize a seat's joypad bindings (keyboard-only seat).
+func clear_device_for_player(player_id: int) -> void:
+	assign_device_to_player(player_id, NO_DEVICE)
 
 func spawn_players() -> void:
 	player_amount = 0

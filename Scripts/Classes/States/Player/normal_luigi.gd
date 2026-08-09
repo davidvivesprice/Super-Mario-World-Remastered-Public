@@ -27,18 +27,18 @@ var can_move := true
 
 var can_yoshi_stomp := false
 
-const walk_speed := 90.0   # authentic SMW: 0x18 subpx/frame
+const walk_speed := 90.0   # fork tuning: +20% over stock 75 (authentic SMW is 75) - snappier couch feel
 # When doing slope data structures: first index is ALWAYS moving down the slope. Second index is moving up slope.
-const walk_slope_speeds := {Player.Slopes.GRADUAL: [75, 75],
-							 Player.Slopes.NORMAL: [90, 63.75],
-							 Player.Slopes.STEEP: [135, 56.25],
-							Player.Slopes.VERY_STEEP: [135, 0]}
+const walk_slope_speeds := {Player.Slopes.GRADUAL: [90, 90],
+							 Player.Slopes.NORMAL: [108, 76.5],
+							 Player.Slopes.STEEP: [162, 67.5],
+							Player.Slopes.VERY_STEEP: [162, 0]}
 
-const run_speed := 150.0   # authentic SMW: 0x28 subpx/frame
-const run_slope_speeds := {Player.Slopes.GRADUAL: [135, 135],
-							Player.Slopes.NORMAL: [135, 116.75],
-							Player.Slopes.STEEP: [135, 61],
-							Player.Slopes.VERY_STEEP: [135, 0]}
+const run_speed := 150.0   # fork tuning: +11% over stock 135 (authentic SMW is 135) - snappier couch feel
+const run_slope_speeds := {Player.Slopes.GRADUAL: [150, 150],
+							Player.Slopes.NORMAL: [150, 129.7],
+							Player.Slopes.STEEP: [150, 67.8],
+							Player.Slopes.VERY_STEEP: [150, 0]}
 
 const sprint_speed := 180.0
 const sprint_slope_speeds := {Player.Slopes.GRADUAL: [180, 180],
@@ -70,7 +70,7 @@ const spin_jump_incr := 7.5
 const jump_height := 290.5
 const spin_jump_height := 266.25
 
-const accel := 5.625   # authentic SMW ground accel
+const accel := 5.625   # authentic SMW ground accel (0.09375 px/f^2)
 const l_accel := 3.0
 
 const decel := 3.0
@@ -317,7 +317,7 @@ func handle_yoshi() -> void:
 func handle_p_meter() -> void:
 	if player.is_on_floor():
 		if abs(player.velocity.x) >= run_speed and Input.is_action_pressed(CoopManager.get_player_input_str("run", player.player_id)):
-			p_meter += 1   # authentic fill rate (p_max 112 frames)
+			p_meter += 2   # authentic SMW rate: fills 112 in ~56 frames
 		else:
 			p_meter -= 1
 	p_meter = clamp(p_meter, 0, p_max)

@@ -21,18 +21,26 @@ func _ready() -> void:
 		i.power_state = load(CoopManager.player_power_states[index])
 		index += 1
 
+var finished := false
+
 func show_lines() -> void:
 	for i in lines:
 		if i is ColorRect:
 			i.hide()
 			await get_tree().create_timer(0.75).timeout
+			if not is_inside_tree():
+				return   # cutscene was skipped and freed mid-reveal
 
 func finish() -> void:
+	if finished:
+		return   # idempotent: skip and natural end can both call this
+	finished = true
 	SaveManager.current_save.eggs_rescued[egg_index] = true
 	TransitionManager.transition_to_map(GameManager.current_map_path, self, true)
 
 func _process(_delta: float) -> void:
 	# Any player can skip the egg-rescue cutscene; the rescue still counts.
-	if Input.is_action_just_pressed("ui_accept"):
+	# Don't consume the press while a scene transition is still in flight.
+	if Input.is_action_just_pressed("ui_accept") and not TransitionManager.changing_scene:
 		set_process(false)
 		finish()
