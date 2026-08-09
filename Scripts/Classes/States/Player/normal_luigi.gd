@@ -27,18 +27,18 @@ var can_move := true
 
 var can_yoshi_stomp := false
 
-const walk_speed := 90.0   # fork tuning: +20% over stock 75 (authentic SMW is 75) - snappier couch feel
+const walk_speed := 75.0   # true SNES value: 0x14 subpx/frame (locked - do not "improve")
 # When doing slope data structures: first index is ALWAYS moving down the slope. Second index is moving up slope.
-const walk_slope_speeds := {Player.Slopes.GRADUAL: [90, 90],
-							 Player.Slopes.NORMAL: [108, 76.5],
-							 Player.Slopes.STEEP: [162, 67.5],
-							Player.Slopes.VERY_STEEP: [162, 0]}
+const walk_slope_speeds := {Player.Slopes.GRADUAL: [75, 75],
+							 Player.Slopes.NORMAL: [90, 63.75],
+							 Player.Slopes.STEEP: [135, 56.25],
+							Player.Slopes.VERY_STEEP: [135, 0]}
 
-const run_speed := 150.0   # fork tuning: +11% over stock 135 (authentic SMW is 135) - snappier couch feel
-const run_slope_speeds := {Player.Slopes.GRADUAL: [150, 150],
-							Player.Slopes.NORMAL: [150, 129.7],
-							Player.Slopes.STEEP: [150, 67.8],
-							Player.Slopes.VERY_STEEP: [150, 0]}
+const run_speed := 135.0   # true SNES value: 0x24 subpx/frame (locked - do not "improve")
+const run_slope_speeds := {Player.Slopes.GRADUAL: [135, 135],
+							Player.Slopes.NORMAL: [135, 116.75],
+							Player.Slopes.STEEP: [135, 61],
+							Player.Slopes.VERY_STEEP: [135, 0]}
 
 const sprint_speed := 180.0
 const sprint_slope_speeds := {Player.Slopes.GRADUAL: [180, 180],
