@@ -161,6 +161,8 @@ func _process(delta: float) -> void:
 	for i in alive_players.values():
 		if is_instance_valid(i):
 			player_amount += 1
+	camera_distance_zoom_enabled = SettingsManager.settings_file.get("coop_camera_zoom", true)
+	handle_splitscreen()
 	handle_camera(delta)
 	handle_offscreen_icons()
 
@@ -231,18 +233,122 @@ func reset_values() -> void:
 	dead_players = {}
 	player_yoshis = [false, false, false, false]
 
+## --- Couch split-screen (experimental, setting: coop_splitscreen) ---
+## Each seat gets a SubViewport that shares the live level's World2D with its
+## own follow camera. The grid mounts on the Splitscreen CanvasLayer and covers
+## the shared-camera view underneath. 2P = stacked halves, 3-4P = quadrants.
+
+var split_built := false
+var split_cameras: Array[Camera2D] = []
+var split_grid: GridContainer = null
+
+func handle_splitscreen() -> void:
+	# `splitscreen and not split_built` = VS mode owns the flag; stay out.
+	var want: bool = SettingsManager.settings_file.get("coop_splitscreen", false) \
+		and coop_enabled \
+		and is_instance_valid(GameManager.current_level) \
+		and not GameManager.autoscrolling \
+		and not (splitscreen and not split_built)
+	if want and not split_built:
+		build_splitscreen()
+	elif split_built and not want:
+		teardown_splitscreen()
+	if split_built:
+		update_split_cameras()
+
+func build_splitscreen() -> void:
+	var view_size: Vector2 = get_viewport().get_visible_rect().size
+	var seats: int = players_connected
+	var cols := 1 if seats <= 2 else 2
+	var rows := 2
+	split_grid = GridContainer.new()
+	split_grid.columns = cols
+	split_grid.add_theme_constant_override("h_separation", 0)
+	split_grid.add_theme_constant_override("v_separation", 0)
+	splitscreen_canvas.add_child(split_grid)
+	split_grid.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var cell := Vector2(view_size.x / cols, view_size.y / rows)
+	split_cameras.clear()
+	for seat in cols * rows:
+		if seat < seats:
+			var svc := SubViewportContainer.new()
+			svc.stretch = true
+			svc.custom_minimum_size = cell
+			var sv := SubViewport.new()
+			sv.size = Vector2i(cell)
+			sv.world_2d = get_viewport().world_2d
+			sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+			var cam := Camera2D.new()
+			cam.offset = Vector2(0, -16)
+			cam.position_smoothing_enabled = true
+			cam.position_smoothing_speed = 8.0
+			cam.limit_left = -64
+			cam.limit_bottom = 64
+			cam.limit_smoothed = true
+			sv.add_child(cam)
+			svc.add_child(sv)
+			split_grid.add_child(svc)
+			cam.make_current()
+			split_cameras.append(cam)
+		else:
+			# 3 players on a 2x2 grid: dead quadrant stays black.
+			var filler := ColorRect.new()
+			filler.color = Color.BLACK
+			filler.custom_minimum_size = cell
+			split_grid.add_child(filler)
+	for i in off_screen_icons:
+		i.visible = false
+	splitscreen = true
+	split_built = true
+
+func teardown_splitscreen() -> void:
+	split_built = false
+	splitscreen = false
+	split_cameras.clear()
+	if is_instance_valid(split_grid):
+		split_grid.queue_free()
+	split_grid = null
+
+func update_split_cameras() -> void:
+	if not is_instance_valid(GameManager.current_level):
+		return
+	var limit_right: int = GameManager.current_level.camera_left_end_position
+	var limit_top: int = GameManager.current_level.camera_top_end_position + 16
+	for seat in split_cameras.size():
+		var cam := split_cameras[seat]
+		if not is_instance_valid(cam):
+			continue
+		cam.limit_right = limit_right
+		cam.limit_top = limit_top
+		var target: Node2D = null
+		if alive_players.has(seat) and is_instance_valid(alive_players[seat]):
+			target = alive_players[seat]
+		elif active_players.has(seat) and is_instance_valid(active_players[seat]):
+			target = active_players[seat]
+		if target == null:
+			target = get_first_alive_player()
+		if target == null:
+			continue
+		cam.global_position = target.global_position
+		if cam.get_meta("fresh", true):
+			cam.reset_smoothing()
+			cam.set_meta("fresh", false)
+
 func handle_distance_zoom(delta: float) -> void:
 	var player_dists = []
-	var min_dist := Vector2.ZERO
-	var max_dist := Vector2.ONE
-	var distance := 0.0
 	for i in active_players.values():
-		player_dists.append(coop_camera.to_local(i.global_position))
-	max_dist = player_dists.max()
-	min_dist = player_dists.min()
-	distance = min_dist.distance_to(max_dist)
-	var target_zoom := (350 / distance)
-	target_zoom = clamp(target_zoom, 0.01, 1)
+		if is_instance_valid(i):
+			player_dists.append(coop_camera.to_local(i.global_position))
+	if player_dists.size() < 2:
+		coop_camera.zoom = lerp(coop_camera.zoom, Vector2.ONE, delta * 20)
+		return
+	var max_dist: Vector2 = player_dists.max()
+	var min_dist: Vector2 = player_dists.min()
+	var distance := min_dist.distance_to(max_dist)
+	var target_zoom := 350.0 / maxf(distance, 1.0)
+	# Floor at 0.6: past ~1.6x view the sprites are unreadable from a couch;
+	# beyond that spread the off-screen icons take over anyway.
+	target_zoom = clamp(target_zoom, 0.6, 1.0)
 	coop_camera.zoom = lerp(coop_camera.zoom, Vector2(target_zoom, target_zoom), delta * 20)
 
 func get_player_input_str(action, player_id) -> String:

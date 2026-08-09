@@ -75,6 +75,8 @@ var settings_template := {
 	"fast_swim_accel": false,
 	"disable_auto_scroll": false,
 	"fast_climb": false,
+	"coop_camera_zoom": true,
+	"coop_splitscreen": false,
 	"fast_map_unlock_speed": false,
 	"show_level_start_text": true,
 	"jump_buffer": true,
