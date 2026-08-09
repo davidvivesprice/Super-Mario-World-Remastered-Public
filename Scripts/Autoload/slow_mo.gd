@@ -1,39 +1,63 @@
 extends Node
-## Slow-mo powerups (David's design, 2026-08-09).
-## Charge your meter with coins (+4) and enemy defeats (+10); a full bar arms.
-## L3 (click left stick) = ENEMY slow-mo: every enemy runs at half speed.
-## R3 (click right stick) = WORLD slow-mo: everything drops into syrup.
-## An effect drains the owner's bar over ~15 s - but charge earned during the
-## effect refills the bar, directly extending it. Keyboard seat: V / B.
+## Slow-mo powerups (David's design, v2 after playtest).
+## Charge with coins (+4) and enemy defeats (+10); a full bar arms both modes.
+## L3 = ENEMY slow-mo, R3 = WORLD slow-mo. 15 s drain, refilled (extended) by
+## anything you score during the effect. Keyboard seat: V / B.
 ##
-## Enemy mode mechanism: every Enemy-derived node (group "enemies", enrolled
-## by EnemyClass._enter_tree) is process-frozen on alternate physics frames -
-## exact half speed for motion, AI, child timers and animation, zero
-## per-enemy edits. Hardened per audit: child collision objects switch to
-## DISABLE_MODE_KEEP_ACTIVE while active (no area_entered churn), only nodes
-## we froze get unfrozen (meta tag - never fights VisibleOnScreenEnabler2D or
-## the ice block), ice-frozen / yoshi-tongued enemies are skipped.
-## World mode: Engine.time_scale (the credits are the only other user), plus
-## a pitch-shift on the Music bus for the syrup feel.
+## WORLD mode (v2): the whole game view skips every other simulation frame -
+## "dropping framerate" on purpose. Per executed frame the physics are
+## byte-identical (jump heights exact); the world just plays at half rate.
+## No Engine.time_scale - v1 used it and it warped jump feel.
+## ENEMY mode (v2): alternate-frame freeze on everything in the "enemies"
+## group EXCEPT bodies in the air - arcs and falls play out at full physics,
+## only grounded locomotion (and floaty pattern movers on the ground) halves.
+## Both modes paint a breathing vignette: teal = enemy, indigo = world.
 
 const DRAIN_PER_SEC := 100.0 / 15.0    # full bar = 15 s (David's number)
-const WORLD_TIME_SCALE := 0.5
 const MUSIC_PITCH := 0.85
 
 const SFX_IN := preload("res://Assets/Audio/SFX/slowmo_in.wav")
 const SFX_OUT := preload("res://Assets/Audio/SFX/slowmo_out.wav")
+const VIGNETTE_SHADER := preload("res://Shaders/slowmo_vignette.gdshader")
+
+const TEAL := Color(0.05, 0.78, 0.72)
+const INDIGO := Color(0.38, 0.28, 0.95)
 
 var enemy_seat := -1     # seat that owns the active enemy slow-mo (-1 = off)
 var world_seat := -1
 var _area_cache := {}    # CollisionObject2D -> original disable_mode
 var _pitch_fx: AudioEffectPitchShift = null
+var _vignette: ColorRect = null
+var _vig_mat: ShaderMaterial = null
+var _vig_strength := 0.0
+var _vig_target := 0.0
+
+func _ready() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 3   # above split panes (1) + meters (2), below GameManager UI (5)
+	add_child(layer)
+	_vignette = ColorRect.new()
+	_vignette.color = Color.WHITE
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vig_mat = ShaderMaterial.new()
+	_vig_mat.shader = VIGNETTE_SHADER
+	_vignette.material = _vig_mat
+	layer.add_child(_vignette)
+	_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_vignette.visible = false
+
+func _process(delta: float) -> void:
+	# vignette fade runs on idle time so it stays smooth during frame-skip
+	_vig_strength = move_toward(_vig_strength, _vig_target, delta * 2.5)
+	_vig_mat.set_shader_parameter("strength", _vig_strength)
+	_vignette.visible = _vig_strength > 0.01
 
 func _physics_process(delta: float) -> void:
-	# world mode scales delta; drain and countdown in real time
-	var real_delta := delta / maxf(Engine.time_scale, 0.05)
 	if _gameplay_ok():
 		_poll_activation()
-	_run_drain(real_delta)
+	_run_drain(delta)
+	if world_seat >= 0:
+		_world_tick()
 	if enemy_seat >= 0:
 		_freeze_tick()
 
@@ -58,38 +82,68 @@ func _poll_activation() -> void:
 		elif world_seat == -1 and Input.is_action_just_pressed(CoopManager.get_player_input_str("slowmo_world", seat)):
 			_start_world(seat)
 
-func _run_drain(real_delta: float) -> void:
+func _run_drain(delta: float) -> void:
 	if enemy_seat >= 0:
-		CoopManager.slowmo_charge[enemy_seat] = maxf(CoopManager.slowmo_charge[enemy_seat] - DRAIN_PER_SEC * real_delta, 0.0)
+		CoopManager.slowmo_charge[enemy_seat] = maxf(CoopManager.slowmo_charge[enemy_seat] - DRAIN_PER_SEC * delta, 0.0)
 		if CoopManager.slowmo_charge[enemy_seat] <= 0.0 or not _gameplay_ok():
 			_end_enemy()
 	if world_seat >= 0:
-		CoopManager.slowmo_charge[world_seat] = maxf(CoopManager.slowmo_charge[world_seat] - DRAIN_PER_SEC * real_delta, 0.0)
+		CoopManager.slowmo_charge[world_seat] = maxf(CoopManager.slowmo_charge[world_seat] - DRAIN_PER_SEC * delta, 0.0)
 		if CoopManager.slowmo_charge[world_seat] <= 0.0 or not _gameplay_ok():
 			_end_world()
+
+func _set_vignette(col: Color, on: bool) -> void:
+	if on:
+		_vig_mat.set_shader_parameter("tint", Color(col.r, col.g, col.b, 1.0))
+		_vig_target = 1.0
+	else:
+		# only fade out if the other mode isn't holding the overlay
+		if enemy_seat == -1 and world_seat == -1:
+			_vig_target = 0.0
+		elif enemy_seat >= 0:
+			_vig_mat.set_shader_parameter("tint", Color(TEAL.r, TEAL.g, TEAL.b, 1.0))
+		elif world_seat >= 0:
+			_vig_mat.set_shader_parameter("tint", Color(INDIGO.r, INDIGO.g, INDIGO.b, 1.0))
 
 func _start_enemy(seat: int) -> void:
 	enemy_seat = seat
 	SoundManager.play_ui_sound(SFX_IN)
+	_set_vignette(TEAL, true)
 
 func _end_enemy() -> void:
 	enemy_seat = -1
 	SoundManager.play_ui_sound(SFX_OUT)
 	_thaw_all()
+	_set_vignette(TEAL, false)
 
 func _start_world(seat: int) -> void:
 	world_seat = seat
-	Engine.time_scale = WORLD_TIME_SCALE
 	SoundManager.play_ui_sound(SFX_IN)
 	_music_pitch(MUSIC_PITCH)
+	_set_vignette(INDIGO, true)
 
 func _end_world() -> void:
 	world_seat = -1
-	Engine.time_scale = 1.0
 	SoundManager.play_ui_sound(SFX_OUT)
 	_music_pitch(1.0)
+	if is_instance_valid(ViewRoot.view):
+		ViewRoot.view.process_mode = Node.PROCESS_MODE_INHERIT
+	_set_vignette(INDIGO, false)
 
-## ---- enemy-mode freeze loop ------------------------------------------------
+## ---- world mode: whole-game frame skip ------------------------------------
+## The entire game lives inside ViewRoot's GameView; disabling its processing
+## every other physics frame halves the simulation rate for EVERYTHING in it
+## (players, enemies, timers, animations) with per-frame physics untouched.
+## Nodes with explicit PROCESS_MODE_ALWAYS (the pause menu) keep running -
+## DISABLED only propagates to children that INHERIT.
+
+func _world_tick() -> void:
+	if not is_instance_valid(ViewRoot.view):
+		return
+	var off_frame := (Engine.get_physics_frames() & 1) == 1
+	ViewRoot.view.process_mode = Node.PROCESS_MODE_DISABLED if off_frame else Node.PROCESS_MODE_INHERIT
+
+## ---- enemy mode: grounded freeze loop --------------------------------------
 
 func _freeze_tick() -> void:
 	var off_frame := (Engine.get_physics_frames() & 1) == 1
@@ -102,7 +156,10 @@ func _freeze_tick() -> void:
 		var y = e.get("yoshi")
 		if y != null and is_instance_valid(y):
 			continue
-		if off_frame:
+		# airborne bodies finish their arcs at full physics ("slow their
+		# speed, not their physics" - jumps and falls look natural)
+		var airborne: bool = e is CharacterBody2D and not e.is_on_floor() and absf(e.velocity.y) > 1.0
+		if off_frame and not airborne:
 			if e.process_mode != Node.PROCESS_MODE_DISABLED:
 				_keep_areas_active(e)
 				e.process_mode = Node.PROCESS_MODE_DISABLED
