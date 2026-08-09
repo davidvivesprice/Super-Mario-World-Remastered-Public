@@ -86,11 +86,16 @@ func handle_cursor_movement(id := 0) -> void:
 	for i in character_containers:
 		i.hovered = player_character_slots.values().has(i)
 	if Input.is_action_just_pressed(CoopManager.get_player_input_str("jump", id)):
-		if player_characters[id] != null:
+		# base-game bug fix: leaving a card nulls the slot but keeps the stale
+		# character, so selecting off-card crashed here - require both, and
+		# re-validate after the await (the cursor keeps moving that frame)
+		var slot = player_character_slots[id]
+		if player_characters[id] != null and slot != null:
 			SoundManager.play_ui_sound(player_characters[id].selection_sfx)
 			await get_tree().process_frame
-			player_character_slots[id].selected = true
-			selected[id] = true
+			if is_instance_valid(slot):
+				slot.selected = true
+				selected[id] = true
 	if player_character_slots[id] != null:
 		if Input.is_action_just_pressed("ui_tab_left"):
 			player_character_slots[id].index -= 1
@@ -110,6 +115,12 @@ func open() -> void:
 	selected = {0: false, 1: false, 2: false, 3: false}
 	for i in character_containers:
 		i.selected = false
+	# Seats past P1 with no inputs bound (no pad) can never move a cursor -
+	# hand them their default character so the room isn't stuck waiting.
+	for id in range(1, CoopManager.players_connected):
+		if CoopManager.player_device_ids[id] == CoopManager.NO_DEVICE and characters.size() > 0:
+			player_characters[id] = characters[wrapi(id, 0, characters.size())]
+			selected[id] = true
 	await get_tree().physics_frame
 	is_open = true
 

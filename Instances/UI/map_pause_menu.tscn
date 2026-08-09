@@ -121,6 +121,6 @@ offset_bottom = 272.0
 
 [connection signal="player_setup_selected" from="." to="PlayerAmountSelect" method="open"]
 [connection signal="cancelled" from="PlayerAmountSelect" to="." method="resume_game"]
-[connection signal="selected" from="PlayerAmountSelect" to="DeviceAssigner" method="open"]
+[connection signal="selected" from="PlayerAmountSelect" to="CharacterSelect" method="open"]
 [connection signal="closed" from="DeviceAssigner" to="PlayerAmountSelect" method="open"]
 [connection signal="finished" from="DeviceAssigner" to="CharacterSelect" method="open"]

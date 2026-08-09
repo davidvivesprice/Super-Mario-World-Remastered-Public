@@ -139,7 +139,7 @@ settings_value = "coop_camera_zoom"
 
 [node name="CoopSplitScreen" parent="VBoxContainer" instance=ExtResource("2_xgdys")]
 layout_mode = 2
-node_title = "Co-op Split Screen (Beta)"
-selectable_values = [false, true]
-value_colours = Array[Color]([Color(1, 0.194376, 0.144153, 1), Color(0.345098, 0.972549, 0.345098, 1)])
-settings_value = "coop_splitscreen"
+node_title = "Co-op Screen (2P)"
+option_value_usage = 1
+selectable_values = ["Smart Split", "Always Split", "One Screen"]
+settings_value = "coop_split_mode"

@@ -76,7 +76,7 @@ var settings_template := {
 	"disable_auto_scroll": false,
 	"fast_climb": false,
 	"coop_camera_zoom": true,
-	"coop_splitscreen": false,
+	"coop_split_mode": 0, # 0 = dynamic (split when apart), 1 = always split, 2 = single screen
 	"fast_map_unlock_speed": false,
 	"show_level_start_text": true,
 	"jump_buffer": true,

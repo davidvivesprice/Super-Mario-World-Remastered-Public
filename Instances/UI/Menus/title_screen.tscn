@@ -212,7 +212,7 @@ layout_mode = 1
 [connection signal="option_2_selected" from="MainMenuSelections2" to="." method="open_online_menu"]
 [connection signal="cancelled" from="PlayerAmountSelect" to="Logo" method="show"]
 [connection signal="cancelled" from="PlayerAmountSelect" to="MainMenuSelections2" method="open_menu"]
-[connection signal="selected" from="PlayerAmountSelect" to="DeviceAssigner" method="open"]
+[connection signal="selected" from="PlayerAmountSelect" to="CharacterSelect" method="open"]
 [connection signal="closed" from="SaveSelect" to="PlayerAmountSelect" method="open"]
 [connection signal="custom_levels_selected" from="SaveSelect" to="." method="open_custom_levels"]
 [connection signal="save_selected" from="SaveSelect" to="CircleShow/CircleAnim" method="play_backwards"]

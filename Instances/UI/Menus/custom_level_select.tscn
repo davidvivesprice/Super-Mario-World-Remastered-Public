@@ -269,6 +269,6 @@ grow_vertical = 2
 
 [connection signal="level_selected" from="." to="PlayerAmountSelect" method="open"]
 [connection signal="selected" from="PlayerAmountSelect" to="PlayerAmountSelect" method="exit"]
-[connection signal="selected" from="PlayerAmountSelect" to="DeviceAssigner" method="open"]
+[connection signal="selected" from="PlayerAmountSelect" to="CharacterSelect" method="open"]
 [connection signal="finished" from="DeviceAssigner" to="DeviceAssigner" method="close"]
 [connection signal="finished" from="DeviceAssigner" to="CharacterSelect" method="open"]
