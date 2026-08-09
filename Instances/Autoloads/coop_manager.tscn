@@ -58,3 +58,5 @@ editor_draw_limits = true
 editor_draw_drag_margin = true
 
 [node name="CameraTransform" type="RemoteTransform2D" parent="CoopCamera"]
+
+[node name="Splitscreen" type="CanvasLayer" parent="."]

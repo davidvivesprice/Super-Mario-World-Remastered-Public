@@ -5,12 +5,8 @@ var active := false
 var selected_index := 0
 var selected_save: Node = null
 @onready var saves = [$SaveContainer/Save1, $SaveContainer/Save2, $SaveContainer/Save3]
-@onready var sub_selections := [$LevelSelect]
 @onready var animations: AnimationPlayer = $Animations
-@onready var music: AudioStreamPlayer = $Music
 @onready var arrow: CenterContainer = $Arrow
-@onready var level_select: NinePatchRect = $LevelSelect
-@onready var sub_arrow: CenterContainer = $SubArrow
 
 var can_enter := true
 

@@ -12,11 +12,9 @@ var selected := false
 @onready var egg_container: GridContainer = $ValidFile/EggContainer
 @onready var star_count: Label = $ValidFile/StarPoints/Label
 @onready var switch_blocks: HBoxContainer = $ValidFile/SwitchBlocks
-@onready var lives: Label = $ValidFile/PlayerCharacter/Lives
 
 const PLAYER_LABELS = [preload("res://Assets/Sprites/UI/HUD/MarioTitle.png"), preload("res://Assets/Sprites/UI/HUD/LuigiTitle.png")]
 
-@onready var player_character: TextureRect = $ValidFile/PlayerCharacter
 
 @export var file_index := 0
 

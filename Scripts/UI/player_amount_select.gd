@@ -1,6 +1,5 @@
 extends Control
 @onready var pointer: CenterContainer = $Pointer
-@onready var animations: AnimationPlayer = $Animations
 
 @onready var panels = [$"HBoxContainer/1Player", $"HBoxContainer/2Player", $"HBoxContainer/3Player", $"HBoxContainer/4Player"]
 
