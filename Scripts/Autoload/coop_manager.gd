@@ -67,12 +67,35 @@ const SEAT_PRIMARY_STRINGS := ["dive", "jump", "move_down", "move_left", "move_r
 const SEAT_SECONDARY_ACTIONS := [preload("res://Resources/Inputs/move_down_pad.tres"), preload("res://Resources/Inputs/move_left_pad.tres"), preload("res://Resources/Inputs/move_right_pad.tres"), preload("res://Resources/Inputs/move_up_pad.tres"), preload("res://Resources/Inputs/jump_2.tres"), preload("res://Resources/Inputs/run_2.tres"), preload("res://Resources/Inputs/spin_jump_2.tres"), preload("res://Resources/Inputs/dive_2.tres")]
 const SEAT_SECONDARY_STRINGS := ["move_down", "move_left", "move_right", "move_up", "jump", "run", "spin_jump", "dive"]
 
+## Fallbacks for seats the character-select screen left null (it overwrites
+## player_characters wholesale with nulls for unclaimed seats - a mid-game
+## joiner would crash on null.base_character_scene without this).
+const DEFAULT_CHARACTERS := [preload("res://Resources/Characters/Mario.tres"), preload("res://Resources/Characters/Luigi.tres"), preload("res://Resources/Characters/Toad.tres"), preload("res://Resources/Characters/Toadette.tres")]
+
+func character_for_seat(seat: int) -> CharacterResource:
+	var c = player_characters.get(seat)
+	if c == null:
+		c = DEFAULT_CHARACTERS[clampi(seat, 0, DEFAULT_CHARACTERS.size() - 1)]
+		player_characters[seat] = c   # cutscenes and next-level spawns read this
+	return c
+
 func _ready() -> void:
 	# Default P1 to whichever pad is actually connected first, so a lone pad
 	# on any device id (pad slot 1, hot-replug, etc.) always drives player 1.
 	var pads := Input.get_connected_joypads()
 	if pads.size() > 0:
 		assign_device_to_player(0, pads[0])
+	call_deferred("_enter_view_root")
+
+## The game world lives inside ViewRoot's GameView now: the shared camera
+## must drive THAT viewport, and the world-space off-screen icons must live
+## in its world to be visible.
+func _enter_view_root() -> void:
+	coop_camera.custom_viewport = ViewRoot.view
+	for icon in off_screen_icons:
+		if icon.get_parent() != ViewRoot.view:
+			icon.get_parent().remove_child(icon)
+			ViewRoot.view.add_child(icon)
 
 ## Strip every joypad event from a seat's actions; keyboard events survive.
 func clear_seat_joypad_bindings(player_id: int) -> void:
@@ -114,11 +137,11 @@ func spawn_players() -> void:
 	player_1 = get_first_any_player()
 	await get_tree().physics_frame
 	for i in players_connected - 1:
-		var node = player_characters[i + 1].base_character_scene.instantiate()
+		var node = character_for_seat(i + 1).base_character_scene.instantiate()
 		var id = i + 1
 		node.player_id = id
 		node.starting_direction = player_1.starting_direction
-		node.character = player_characters[id]
+		node.character = character_for_seat(id)
 		if is_instance_valid(player_1):
 			if CoopManager.pipe_exiting:
 				node.global_position = GameManager.current_level.pipes[TransitionManager.pipe_id].global_position
@@ -187,15 +210,13 @@ func _process(delta: float) -> void:
 	camera_distance_zoom_enabled = SettingsManager.settings_file.get("coop_camera_zoom", true)
 	rejoin_cooldown = maxf(rejoin_cooldown - delta, 0.0)
 	handle_dropout(delta)
+	# Pane cameras copy the CoopCamera recipe EXACTLY - interpolation ON,
+	# physics callback, positions written from idle - because that is the one
+	# camera empirically smooth in this engine build. (Streak history: idle
+	# cams w/o interpolation smeared; physics-tick writes still smeared.)
+	handle_splitscreen()
 	handle_camera(delta)
 	handle_offscreen_icons()
-
-func _physics_process(_delta: float) -> void:
-	# Split decisions and pane-camera moves run on the physics tick: the pane
-	# cameras are physics-interpolated like every hand-tuned camera in this
-	# project, and interpolated nodes must be moved from physics, not idle,
-	# or the view smears on motion (the "light streaking" bug).
-	handle_splitscreen()
 
 ## --- Pop-in / pop-out (drop-in co-op) --------------------------------------
 ## Mid-level: a pad nobody is using joins on any button press (floats in as a
@@ -269,9 +290,9 @@ func runtime_join(device: int) -> void:
 func spawn_one(seat: int) -> void:
 	if not is_instance_valid(GameManager.current_level):
 		return
-	var node = player_characters[seat].base_character_scene.instantiate()
+	var node = character_for_seat(seat).base_character_scene.instantiate()
 	node.player_id = seat
-	node.character = player_characters[seat]
+	node.character = character_for_seat(seat)
 	var anchor := get_first_alive_player()
 	if is_instance_valid(anchor):
 		node.starting_direction = anchor.starting_direction
@@ -480,7 +501,7 @@ func compute_split_layout():
 		# Always Split: fixed stacked halves, P1 on top - predictable
 		var seats := [pair[0].seat, pair[1].seat] if pair[0].seat <= pair[1].seat else [pair[1].seat, pair[0].seat]
 		return {"vertical": false, "seats": seats}
-	var view: Vector2 = get_viewport().get_visible_rect().size
+	var view: Vector2 = ViewRoot.view.get_visible_rect().size
 	var level = GameManager.current_level
 	# level rect from the same limits the cameras use
 	var sec_w: float = float(level.camera_left_end_position) - (-64.0)
@@ -499,7 +520,7 @@ func compute_split_layout():
 	return null
 
 func build_split_2p(layout: Dictionary) -> void:
-	var view: Vector2 = get_viewport().get_visible_rect().size
+	var view: Vector2 = ViewRoot.view.get_visible_rect().size
 	split_vertical = layout.vertical
 	split_seats.assign(layout.seats)
 
@@ -520,9 +541,12 @@ func build_split_2p(layout: Dictionary) -> void:
 		var svc := SubViewportContainer.new()
 		svc.stretch = true
 		svc.custom_minimum_size = cell
+		# panes must match the main view's Screen Style (cleanEdge or nearest)
+		svc.material = ViewRoot.pane_material()
+		svc.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		var sv := SubViewport.new()
 		sv.size = Vector2i(cell)
-		sv.world_2d = get_viewport().world_2d
+		sv.world_2d = ViewRoot.view.world_2d
 		sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		var cam := Camera2D.new()
 		# SMBX rule: rigid center-lock, no smoothing, no deadzone.
@@ -603,7 +627,7 @@ func update_split_cameras() -> void:
 		avg += (p.node as Node2D).global_position
 	if pair.size() > 0:
 		avg /= pair.size()
-	var view: Vector2 = get_viewport().get_visible_rect().size
+	var view: Vector2 = ViewRoot.view.get_visible_rect().size
 	for i in split_cameras.size():
 		var cam := split_cameras[i]
 		if not is_instance_valid(cam):

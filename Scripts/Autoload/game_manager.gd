@@ -306,7 +306,7 @@ func drop_item(item_power: PlayerPowerUpState) -> void:
 	SoundManager.play_ui_sound(SoundManager.reserve_item)
 	var node = RESERVE_ITEM_DROP.instantiate()
 	node.power = item_power
-	node.global_position = get_viewport().get_camera_2d().get_screen_center_position() - Vector2(0, 119)
+	node.global_position = ViewRoot.view.get_camera_2d().get_screen_center_position() - Vector2(0, 119)
 	current_level.add_child(node)
 	reserved_item = null
 
@@ -389,10 +389,10 @@ var original_camera_position := Vector2.ZERO
 var target_camera: Camera2D = null
 
 func handle_camera_shake() -> void:
-	if is_instance_valid(get_viewport().get_camera_2d()) == false:
+	if is_instance_valid(ViewRoot.view.get_camera_2d()) == false:
 		return
-	if target_camera != get_viewport().get_camera_2d():
-		target_camera = get_viewport().get_camera_2d()
+	if target_camera != ViewRoot.view.get_camera_2d():
+		target_camera = ViewRoot.view.get_camera_2d()
 		original_camera_position = target_camera.offset
 	if is_instance_valid(target_camera) == false:
 		return

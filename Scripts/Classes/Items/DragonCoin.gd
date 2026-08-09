@@ -18,7 +18,9 @@ var path_to_self := ""
 var scores := [1000, 2000, 4000, 8000, 0]
 
 func _ready() -> void:
-	path_to_self = (str(get_tree().root.get_path_to(self)))
+	# trim the ViewRoot prefix so saved coin paths match pre-pipeline saves
+	# (they were stored root-relative before the game moved into GameView)
+	path_to_self = str(get_tree().root.get_path_to(self)).trim_prefix("ViewRoot/GameView/")
 	await get_tree().physics_frame
 	if behind_fence:
 		z_index = -2#

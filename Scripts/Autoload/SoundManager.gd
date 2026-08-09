@@ -100,7 +100,13 @@ func play_sfx(sound, node, pitch := 1.0) -> void:
 		sound = load(sound)
 	audio_node.stream = (sound)
 	audio_node.bus = "SFX"
-	get_tree().root.add_child(audio_node)
+	if audio_node is AudioStreamPlayer2D:
+		# positional audio must live in the game view's world - the 2D
+		# listener is the GameView now, and root-parented 2D players would
+		# be silent there
+		ViewRoot.view.add_child(audio_node)
+	else:
+		get_tree().root.add_child(audio_node)
 	if is_instance_valid(node) and not CoopManager.splitscreen:
 		audio_node.global_position = node.global_position
 		audio_node.max_distance = 512

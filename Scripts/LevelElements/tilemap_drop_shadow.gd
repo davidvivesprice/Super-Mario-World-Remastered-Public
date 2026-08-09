@@ -25,7 +25,7 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	camera.set_custom_viewport(viewport)
 	camera.make_current()
-	camera.global_position = get_tree().root.get_viewport().get_camera_2d().get_screen_center_position()
-	viewport.set_world_2d(GameManager.get_viewport().get_world_2d())
+	camera.global_position = ViewRoot.view.get_camera_2d().get_screen_center_position()
+	viewport.set_world_2d(ViewRoot.view.get_world_2d())
 	
 	

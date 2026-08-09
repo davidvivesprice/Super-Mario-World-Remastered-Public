@@ -115,7 +115,7 @@ func change_scene(old_scene, new_scene) -> Node:
 		scene_node = await load_scene(new_scene)
 	else:
 		scene_node = new_scene
-	get_tree().root.add_child(scene_node)
+	ViewRoot.view.add_child(scene_node)
 	level_transitioned.emit()
 	get_tree().paused = false
 	return scene_node
@@ -232,7 +232,7 @@ func reload_level() -> void:
 	GameManager.racing_ghost = false
 	
 	await get_tree().create_timer(0.25).timeout
-	get_tree().root.add_child(reset_level)
+	ViewRoot.view.add_child(reset_level)
 	get_tree().paused = false
 	await get_tree().physics_frame
 	changing_scene = false

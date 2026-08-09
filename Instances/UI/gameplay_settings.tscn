@@ -143,3 +143,10 @@ node_title = "Co-op Screen (2P)"
 option_value_usage = 1
 selectable_values = ["Smart Split", "Always Split", "One Screen"]
 settings_value = "coop_split_mode"
+
+[node name="ScreenStyle" parent="VBoxContainer" instance=ExtResource("2_xgdys")]
+layout_mode = 2
+node_title = "Screen Style"
+option_value_usage = 1
+selectable_values = ["Smooth & Modern", "Classic Pixels"]
+settings_value = "screen_style"

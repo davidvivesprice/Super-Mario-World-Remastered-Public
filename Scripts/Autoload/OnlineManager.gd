@@ -202,8 +202,8 @@ func add_player_display(id := 0) -> void:
 	var node = ONLINE_PLAYER_DISPLAY.instantiate()
 	node.player_rpc_id = id
 	player_level_displays.append(id)
-	get_tree().root.add_child(node)
+	ViewRoot.view.add_child(node)
 	
 	node = ONLINE_FIELD_PLAYER_DISPLAY.instantiate()
 	node.player_rpc_id = id
-	get_tree().root.add_child(node)
+	ViewRoot.view.add_child(node)

@@ -77,6 +77,7 @@ var settings_template := {
 	"fast_climb": false,
 	"coop_camera_zoom": true,
 	"coop_split_mode": 0, # 0 = dynamic (split when apart), 1 = always split, 2 = single screen
+	"screen_style": 0, # 0 = smooth/modern (cleanEdge), 1 = classic pixels
 	"fast_map_unlock_speed": false,
 	"show_level_start_text": true,
 	"jump_buffer": true,
