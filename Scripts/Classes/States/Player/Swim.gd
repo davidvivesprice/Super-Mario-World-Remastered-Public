@@ -3,10 +3,12 @@ extends PlayerState
 var current_speed := 0
 
 const swim_speed := 60
+const fast_swim_speed := 100
 const hold_swim_speed := 120
 const swim_force := -120
 const swim_gravity := 1.875
 const swim_accel := 5.625
+const fast_swim_accel := 7.625
 const decel := 3.75
 
 const up_y_max := -180
@@ -54,7 +56,12 @@ func handle_swim() -> void:
 	player.velocity.y += swim_gravity
 	player.velocity.y = clamp(player.velocity.y, -9999, 120)
 	if player.input_direction != 0:
-		player.velocity.x = move_toward(player.velocity.x, (swim_speed * player.input_direction) + player.water_current_speed.x, swim_accel)
+		var target_speed := swim_speed
+		var accel := swim_accel
+		if SettingsManager.settings_file.fast_swim_accel == true and Input.is_action_pressed(CoopManager.get_player_input_str("run", player.player_id)):
+			target_speed = fast_swim_speed
+			accel = fast_swim_accel
+		player.velocity.x = move_toward(player.velocity.x, (target_speed * player.input_direction) + player.water_current_speed.x, accel)
 	else:
 		player.velocity.x = move_toward(player.velocity.x, 0 + player.water_current_speed.x, decel)
 	

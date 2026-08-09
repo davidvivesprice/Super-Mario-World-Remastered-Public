@@ -27,14 +27,14 @@ var can_move := true
 
 var can_yoshi_stomp := false
 
-const walk_speed := 75.0
+const walk_speed := 90.0   # authentic SMW: 0x18 subpx/frame
 # When doing slope data structures: first index is ALWAYS moving down the slope. Second index is moving up slope.
 const walk_slope_speeds := {Player.Slopes.GRADUAL: [75, 75],
 							 Player.Slopes.NORMAL: [90, 63.75],
 							 Player.Slopes.STEEP: [135, 56.25],
 							Player.Slopes.VERY_STEEP: [135, 0]}
 
-const run_speed := 135.0
+const run_speed := 150.0   # authentic SMW: 0x28 subpx/frame
 const run_slope_speeds := {Player.Slopes.GRADUAL: [135, 135],
 							Player.Slopes.NORMAL: [135, 116.75],
 							Player.Slopes.STEEP: [135, 61],
@@ -70,7 +70,7 @@ const spin_jump_incr := 7.5
 const jump_height := 290.5
 const spin_jump_height := 266.25
 
-const accel := 5.265
+const accel := 5.625   # authentic SMW ground accel
 const l_accel := 3.0
 
 const decel := 3.0
@@ -317,7 +317,7 @@ func handle_yoshi() -> void:
 func handle_p_meter() -> void:
 	if player.is_on_floor():
 		if abs(player.velocity.x) >= run_speed and Input.is_action_pressed(CoopManager.get_player_input_str("run", player.player_id)):
-			p_meter += 2
+			p_meter += 1   # authentic fill rate (p_max 112 frames)
 		else:
 			p_meter -= 1
 	p_meter = clamp(p_meter, 0, p_max)

@@ -29,5 +29,10 @@ func show_lines() -> void:
 
 func finish() -> void:
 	SaveManager.current_save.eggs_rescued[egg_index] = true
-	print(SaveManager.current_save)
 	TransitionManager.transition_to_map(GameManager.current_map_path, self, true)
+
+func _process(_delta: float) -> void:
+	# Any player can skip the egg-rescue cutscene; the rescue still counts.
+	if Input.is_action_just_pressed("ui_accept"):
+		set_process(false)
+		finish()

@@ -103,3 +103,8 @@ Super Mario World can be played now on Nintendo Switch Online.
 Please dont sue me Nintendo...
 
 Please....
+
+--- Fork additions (davidvivesprice fork) ---
+Shared-lives mode, autoscroll toggle, ROM-from-folder loading, map/QoL
+settings adapted from BTFighter's Super Mario World Remastered Plus fork.
+Authentic-SMW movement constant restoration by the fork maintainers.

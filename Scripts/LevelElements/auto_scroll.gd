@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 @export var path: Path2D = null
 @export var scroll_speed := 5.0
@@ -14,6 +14,11 @@ func _exit_tree() -> void:
 	GameManager.autoscrolling = false
 
 func _ready() -> void:
+	if SettingsManager.settings_file.disable_auto_scroll == true:
+		# Autoscroll disabled (couch-co-op mercy setting): never take over the
+		# camera or mark the level as autoscrolling; leave the walls inert.
+		process_mode = Node.PROCESS_MODE_DISABLED
+		return
 	GameManager.autoscrolling = true
 	path_node.curve = path.curve.duplicate()
 	follow_joint.progress_ratio = 0
