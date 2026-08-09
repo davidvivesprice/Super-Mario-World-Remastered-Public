@@ -55,15 +55,15 @@ var game_overed_players := {}
 @onready var PLAYER_SCENE = load("res://Instances/Prefabs/Player.tscn")
 
 ## Actions that exist once per player as "<action>_<player_id>" in the InputMap.
-const PER_PLAYER_ACTIONS: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "spin_jump", "run", "dive"]
+const PER_PLAYER_ACTIONS: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "spin_jump", "run", "dive", "slowmo_enemy", "slowmo_world"]
 
 ## Marker in player_device_ids for a seat with no pad (keyboard or empty).
 const NO_DEVICE := 63
 
 ## The same binding resources the base game's DeviceAssigner used - a full
 ## stick + d-pad + alt-button set per seat, duplicated onto a chosen device.
-const SEAT_PRIMARY_ACTIONS := [preload("res://Resources/Inputs/dive.tres"), preload("res://Resources/Inputs/jump.tres"), preload("res://Resources/Inputs/move_down_stick.tres"), preload("res://Resources/Inputs/move_left_stick.tres"), preload("res://Resources/Inputs/move_right_stick.tres"), preload("res://Resources/Inputs/move_up_stick.tres"), preload("res://Resources/Inputs/run.tres"), preload("res://Resources/Inputs/spin_jump.tres")]
-const SEAT_PRIMARY_STRINGS := ["dive", "jump", "move_down", "move_left", "move_right", "move_up", "run", "spin_jump"]
+const SEAT_PRIMARY_ACTIONS := [preload("res://Resources/Inputs/dive.tres"), preload("res://Resources/Inputs/jump.tres"), preload("res://Resources/Inputs/move_down_stick.tres"), preload("res://Resources/Inputs/move_left_stick.tres"), preload("res://Resources/Inputs/move_right_stick.tres"), preload("res://Resources/Inputs/move_up_stick.tres"), preload("res://Resources/Inputs/run.tres"), preload("res://Resources/Inputs/spin_jump.tres"), preload("res://Resources/Inputs/slowmo_enemy.tres"), preload("res://Resources/Inputs/slowmo_world.tres")]
+const SEAT_PRIMARY_STRINGS := ["dive", "jump", "move_down", "move_left", "move_right", "move_up", "run", "spin_jump", "slowmo_enemy", "slowmo_world"]
 const SEAT_SECONDARY_ACTIONS := [preload("res://Resources/Inputs/move_down_pad.tres"), preload("res://Resources/Inputs/move_left_pad.tres"), preload("res://Resources/Inputs/move_right_pad.tres"), preload("res://Resources/Inputs/move_up_pad.tres"), preload("res://Resources/Inputs/jump_2.tres"), preload("res://Resources/Inputs/run_2.tres"), preload("res://Resources/Inputs/spin_jump_2.tres"), preload("res://Resources/Inputs/dive_2.tres")]
 const SEAT_SECONDARY_STRINGS := ["move_down", "move_left", "move_right", "move_up", "jump", "run", "spin_jump", "dive"]
 
@@ -419,6 +419,7 @@ func handle_camera(delta: float) -> void:
 		coop_camera.enabled = false
 
 func reset_values() -> void:
+	slowmo_charge = [0.0, 0.0, 0.0, 0.0]
 	player_power_states = [SMALL, SMALL, SMALL, SMALL]
 	game_overed_players = {}
 	dead_players = {}
@@ -678,6 +679,34 @@ func handle_distance_zoom(delta: float) -> void:
 	# beyond that spread the off-screen icons take over anyway.
 	target_zoom = clamp(target_zoom, 0.6, 1.0)
 	coop_camera.zoom = lerp(coop_camera.zoom, Vector2(target_zoom, target_zoom), delta * 20)
+
+## --- Slow-mo charge (per seat, 0-100) --------------------------------
+## Coins and enemy defeats feed each player's meter; the SlowMo autoload
+## consumes it. Persists across levels; resets with the run.
+const SLOWMO_COIN_CHARGE := 4.0
+const SLOWMO_KILL_CHARGE := 10.0
+var slowmo_charge := [0.0, 0.0, 0.0, 0.0]
+
+func add_slowmo_charge(player_id: int, amount: float) -> void:
+	if player_id < 0 or player_id > 3:
+		return
+	slowmo_charge[player_id] = clampf(slowmo_charge[player_id] + amount, 0.0, 100.0)
+
+## Credit whoever `who` resolves to: a Player, something with a .player,
+## else the closest player to pos. GameManager.player is always null in
+## this codebase - never consult it.
+func slowmo_credit(who, pos := Vector2.ZERO, amount := SLOWMO_COIN_CHARGE) -> void:
+	var p = null
+	if who is Player:
+		p = who
+	elif who != null and is_instance_valid(who) and "player" in who and who.player is Player:
+		p = who.player
+	if p == null or not is_instance_valid(p):
+		p = get_closest_player(pos)
+	if p == null or not is_instance_valid(p):
+		p = get_first_alive_player()
+	if p != null and is_instance_valid(p):
+		add_slowmo_charge(p.player_id, amount)
 
 func get_player_input_str(action, player_id) -> String:
 	return action + "_" + str(player_id)

@@ -421,9 +421,11 @@ func check_yoshi_item(item := yoshi_item) -> void:
 			"Swallow":
 				item.queue_free()
 				yoshi_swallow_item()
+				CoopManager.add_slowmo_charge(player_id, CoopManager.SLOWMO_KILL_CHARGE)
 			"Spit":
 				yoshi_stored = item.duplicate()
 				item.queue_free()
+				CoopManager.add_slowmo_charge(player_id, CoopManager.SLOWMO_KILL_CHARGE)
 	elif item is YoshiBerry:
 		yoshi_berry_eat(item.colour)
 	
@@ -1361,6 +1363,7 @@ func has_flag(flag_name := "") -> bool:
 	return false
 
 func add_jump_combo() -> void:
+	CoopManager.add_slowmo_charge(player_id, CoopManager.SLOWMO_KILL_CHARGE)
 	play_sfx("stomp_attack", 1 + (float(jump_combo) / 10))
 	jump_combo += 1
 	jump_combo = clamp(jump_combo, 0, combo_vals.size() - 1)
@@ -1569,6 +1572,7 @@ func enemy_collision_query(enemy: Enemy, enemy_area: Area2D) -> void:
 	elif ground_pounding and not enemy.spiky_top:
 			if enemy.can_hurt:
 				if enemy.can_ground_pound:
+					CoopManager.add_slowmo_charge(player_id, CoopManager.SLOWMO_KILL_CHARGE)
 					enemy.ground_pound_die()
 				else:
 					enemy.damage()
@@ -1578,6 +1582,7 @@ func enemy_collision_query(enemy: Enemy, enemy_area: Area2D) -> void:
 				spiky_jump()
 			elif enemy.can_hurt:
 				if enemy.can_spin_kill:
+					CoopManager.add_slowmo_charge(player_id, CoopManager.SLOWMO_KILL_CHARGE)
 					enemy.spin_die()
 					spin_bounce_off(not riding_yoshi)
 				else:

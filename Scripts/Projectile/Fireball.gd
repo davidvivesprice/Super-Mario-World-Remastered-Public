@@ -41,6 +41,7 @@ func area_enter(area: Area2D) -> void:
 			if node.z_index_dependant:
 				if node.z_index != z_index:
 					return
+			CoopManager.slowmo_credit(player, global_position, CoopManager.SLOWMO_KILL_CHARGE)
 			node.coin_die()
 			SoundManager.play_sfx(player.get_sfx("kick"), self)
 			self.queue_free()

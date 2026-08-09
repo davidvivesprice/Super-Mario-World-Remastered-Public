@@ -24,6 +24,7 @@ func _on_hitbox_area_entered(area: Area2D) -> void:
 			add_coin()
 
 func add_coin() -> void:
+	CoopManager.slowmo_credit(player, global_position)
 	GameManager.add_coin(1, global_position)
 	if player != null:
 		player.play_sfx("coin")

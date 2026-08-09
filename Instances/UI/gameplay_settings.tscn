@@ -150,3 +150,10 @@ node_title = "Screen Style"
 option_value_usage = 1
 selectable_values = ["Smooth & Modern", "Classic Pixels"]
 settings_value = "screen_style"
+
+[node name="SlowmoPowerups" parent="VBoxContainer" instance=ExtResource("2_xgdys")]
+layout_mode = 2
+node_title = "Slow-Mo Powerups"
+selectable_values = [true, false]
+value_colours = Array[Color]([Color(0.345098, 0.972549, 0.345098, 1), Color(1, 0.194376, 0.144153, 1)])
+settings_value = "slowmo_powerups"

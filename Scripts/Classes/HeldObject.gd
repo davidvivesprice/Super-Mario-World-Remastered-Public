@@ -138,6 +138,7 @@ func _process(delta: float) -> void:
 	update(delta)
 
 func add_combo() -> void:
+	CoopManager.slowmo_credit(player, global_position, CoopManager.SLOWMO_KILL_CHARGE)
 	SoundManager.play_sfx(SoundManager.kick, self, 1 + (float(combo) / 10))
 	if combo >= 8:
 		SoundManager.play_global_sfx(SoundManager.one_up)

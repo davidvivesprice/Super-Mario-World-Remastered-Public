@@ -77,7 +77,8 @@ var settings_template := {
 	"fast_climb": false,
 	"coop_camera_zoom": true,
 	"coop_split_mode": 0, # 0 = dynamic (split when apart), 1 = always split, 2 = single screen
-	"screen_style": 1, # 0 = smooth/modern (cleanEdge), 1 = classic pixels (default - David's verdict: cleanEdge melts SMW's detailed 16-bit art)
+	"screen_style": 1, # 0 = smooth/modern (cleanEdge), 1 = classic pixels (David's verdict: cleanEdge melts SMW's 16-bit art)
+	"slowmo_powerups": true,
 	"fast_map_unlock_speed": false,
 	"show_level_start_text": true,
 	"jump_buffer": true,

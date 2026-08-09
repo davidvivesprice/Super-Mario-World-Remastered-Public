@@ -71,6 +71,7 @@ func coin_collect() -> void:
 	SaveManager.current_save.dragon_coins_collected[GameManager.current_level_info.resource_path].append(path_to_self)
 	SoundManager.play_sfx(SoundManager.coin_special, self)
 	ParticleManager.summon_particle(ParticleManager.SPARKLE, global_position)
+	CoopManager.slowmo_credit(player, global_position)
 	GameManager.add_coin(1, global_position)
 	if GameManager.all_coins_collected:
 		GameManager.add_life(1, global_position)
