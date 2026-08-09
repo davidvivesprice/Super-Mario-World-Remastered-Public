@@ -97,3 +97,6 @@ func damage(direction := 1) -> void:
 
 func _on_timer_timeout() -> void:
 	ball()
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

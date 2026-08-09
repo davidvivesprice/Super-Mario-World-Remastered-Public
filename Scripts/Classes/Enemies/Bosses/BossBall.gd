@@ -5,6 +5,7 @@ const move_speed = 100
 @onready var sprite: Sprite2D = $Sprite
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	pass
 
 func _physics_process(delta: float) -> void:

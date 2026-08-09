@@ -5,6 +5,7 @@ extends AnimatableBody2D
 @export_enum("Left", "Right") var direction := 1
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	if direction == 1:
 		$Animation.play_backwards("Spin")
 

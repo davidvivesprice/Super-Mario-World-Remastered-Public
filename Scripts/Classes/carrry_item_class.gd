@@ -17,6 +17,7 @@ var moving := false
 var velocity_lerp := Vector2.ZERO
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	pass
 
 func _physics_process(delta: float) -> void:

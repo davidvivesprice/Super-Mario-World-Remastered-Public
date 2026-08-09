@@ -25,3 +25,6 @@ func _on_activation_area_area_entered(area: Area2D) -> void:
 		var player = area.get_parent()
 		if player.velocity.y > 0:
 			moving = true
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

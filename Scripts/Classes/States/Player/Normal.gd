@@ -421,8 +421,10 @@ func handle_p_meter() -> void:
 		player.p_meter += 2   # authentic SMW rate: fills 112 in ~56 frames
 	else:
 		if not player.is_on_floor():
-			if not player.sprinting:
-				player.p_meter -= 1
+			# TRUE SMW freezes the P-meter while airborne - draining it here
+			# made the sprint tier unreachable in normal jumpy play, which is
+			# why running looked identical to walking (David's report)
+			pass
 		else:
 			player.p_meter -= 1
 	player.p_meter = clamp(player.p_meter, 0, player.p_max)

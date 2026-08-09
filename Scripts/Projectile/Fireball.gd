@@ -8,6 +8,7 @@ var speed := 200
 var direction = 1
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	$FlameEmber.emitting = bool(SettingsManager.sprite_settings.fireball)
 	if is_instance_valid(player):
 		speed += abs(player.velocity.x / 2)

@@ -64,8 +64,8 @@ const NO_DEVICE := 63
 ## stick + d-pad + alt-button set per seat, duplicated onto a chosen device.
 const SEAT_PRIMARY_ACTIONS := [preload("res://Resources/Inputs/dive.tres"), preload("res://Resources/Inputs/jump.tres"), preload("res://Resources/Inputs/move_down_stick.tres"), preload("res://Resources/Inputs/move_left_stick.tres"), preload("res://Resources/Inputs/move_right_stick.tres"), preload("res://Resources/Inputs/move_up_stick.tres"), preload("res://Resources/Inputs/run.tres"), preload("res://Resources/Inputs/spin_jump.tres"), preload("res://Resources/Inputs/slowmo_enemy.tres"), preload("res://Resources/Inputs/slowmo_world.tres")]
 const SEAT_PRIMARY_STRINGS := ["dive", "jump", "move_down", "move_left", "move_right", "move_up", "run", "spin_jump", "slowmo_enemy", "slowmo_world"]
-const SEAT_SECONDARY_ACTIONS := [preload("res://Resources/Inputs/move_down_pad.tres"), preload("res://Resources/Inputs/move_left_pad.tres"), preload("res://Resources/Inputs/move_right_pad.tres"), preload("res://Resources/Inputs/move_up_pad.tres"), preload("res://Resources/Inputs/jump_2.tres"), preload("res://Resources/Inputs/run_2.tres"), preload("res://Resources/Inputs/spin_jump_2.tres"), preload("res://Resources/Inputs/dive_2.tres")]
-const SEAT_SECONDARY_STRINGS := ["move_down", "move_left", "move_right", "move_up", "jump", "run", "spin_jump", "dive"]
+const SEAT_SECONDARY_ACTIONS := [preload("res://Resources/Inputs/move_down_pad.tres"), preload("res://Resources/Inputs/move_left_pad.tres"), preload("res://Resources/Inputs/move_right_pad.tres"), preload("res://Resources/Inputs/move_up_pad.tres"), preload("res://Resources/Inputs/jump_2.tres")]
+const SEAT_SECONDARY_STRINGS := ["move_down", "move_left", "move_right", "move_up", "jump"]
 
 ## Fallbacks for seats the character-select screen left null (it overwrites
 ## player_characters wholesale with nulls for unclaimed seats - a mid-game

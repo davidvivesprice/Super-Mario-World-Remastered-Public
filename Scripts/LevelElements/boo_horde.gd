@@ -5,6 +5,7 @@ const amount := 100
 var scene = preload("res://Instances/Parts/horde_boo.tscn")
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	for i in amount:
 		spawn_boo()
 

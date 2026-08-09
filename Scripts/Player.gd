@@ -1210,8 +1210,8 @@ var sprite_frame_dir := ""
 func handle_power_state() -> void:
 	sprite_frame_dir = ("res://Resources/PlayerSpriteFrames/" + character.character_name + "/" + power_state.sprite_frame_name + ".tres")
 	sprite.sprite_frames = load(sprite_frame_dir)
-	sprite.speed_scale = sprite_speed_scale
 	sprite_speed_scale = clamp(sprite_speed_scale, 1, 99999)
+	sprite.speed_scale = sprite_speed_scale
 	for i in power_sprite_extras:
 		if character.power_sprite_extra_offsets.has(i.extra_name):
 			i.position = character.power_sprite_extra_offsets[i.extra_name]

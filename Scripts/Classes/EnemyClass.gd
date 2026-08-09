@@ -49,7 +49,8 @@ signal jumped_on
 signal killed
 
 func _enter_tree() -> void:
-	add_to_group("enemies")   # slow-mo powerup targets every Enemy subtype
+	add_to_group("enemies")
+	add_to_group("slowmo_world")   # slow-mo powerup targets every Enemy subtype
 	disable_mode = CollisionObject2D.DISABLE_MODE_MAKE_STATIC
 	for i in get_children():
 		if i is VisibleOnScreenEnabler2D or i is VisibleOnScreenNotifier2D:

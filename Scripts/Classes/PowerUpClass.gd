@@ -15,6 +15,7 @@ var direction := 1
 signal grabbed
 
 func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	set_collision_layer_value(1, false)
 
 func _ready() -> void:

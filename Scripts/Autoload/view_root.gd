@@ -18,6 +18,11 @@ func _ready() -> void:
 	# forwarding - it must keep processing while the tree is paused, or pause
 	# menus and the join lobby go dead.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# The container stays ALWAYS for input forwarding while paused, but the
+	# game world must NOT inherit that - get_tree().paused would become a
+	# no-op in-game, breaking the power-up transform freeze, the pause
+	# menu's world-freeze, death/keyhole/door/mega pauses (round-7 bug).
+	view.process_mode = Node.PROCESS_MODE_PAUSABLE
 	# The GameView must be the 2D audio listener or every AudioStreamPlayer2D
 	# in the game world goes silent (the root listener no longer sees them).
 	view.audio_listener_enable_2d = true

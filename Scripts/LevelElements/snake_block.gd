@@ -19,6 +19,7 @@ var moving := false
 @onready var back: StaticBody2D = $Back
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	add_starting_blocks()
 	
 	front_travel_index = path.get_closest_offset(front.global_position)

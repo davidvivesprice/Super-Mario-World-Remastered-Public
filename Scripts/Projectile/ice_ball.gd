@@ -8,6 +8,7 @@ var player: Player = null
 var can_bounce := true
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	sprite.scale.x = -direction
 	velocity.y = speed
 	velocity.x += speed * direction

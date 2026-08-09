@@ -23,6 +23,7 @@ var hatched := false
 @export var force_spawn := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	Yoshi.yoshi_amount = clamp(Yoshi.yoshi_amount, 0, 99)
 	sprite.texture = egg_textures[colour]
 

@@ -5,6 +5,7 @@ var velocity := Vector2.ZERO
 var direction := 1
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	velocity.y = -200
 	velocity.x = 100 * direction
 

@@ -17,3 +17,6 @@ func _on_hitbox_area_exited(area: Area2D) -> void:
 			area.get_parent().set_collision_mask_value(1, true)
 		else:
 			area.get_parent().set_collision_mask_value(3, true)
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

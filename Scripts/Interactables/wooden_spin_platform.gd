@@ -37,3 +37,6 @@ func is_player(area: Area2D) -> bool:
 
 func _on_visible_on_screen_notifier_2d_screen_entered() -> void:
 	rotation_point.global_rotation_degrees = 0
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

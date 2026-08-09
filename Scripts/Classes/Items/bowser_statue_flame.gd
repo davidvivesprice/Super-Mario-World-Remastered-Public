@@ -1,6 +1,7 @@
 extends Enemy
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	SoundManager.play_sfx(SoundManager.boss_flame, self)
 
 func _physics_process(delta: float) -> void:

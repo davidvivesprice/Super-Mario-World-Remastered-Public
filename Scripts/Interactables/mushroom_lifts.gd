@@ -15,6 +15,7 @@ var tilt_strength := 32
 var max_tilt := 64
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	const AUTUMN_LINE = preload("res://Assets/Sprites/Tilesets/Decorations/MushroomAutumnTiles.png")
 	if GameManager.autumn and SettingsManager.settings_file.autumn_type == 0:
 		line_1.texture = AUTUMN_LINE

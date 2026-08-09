@@ -5,6 +5,7 @@ const launch_speed = Vector2(150, -300)
 var direction := 1
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	velocity = launch_speed
 	velocity.x = launch_speed.x * direction
 

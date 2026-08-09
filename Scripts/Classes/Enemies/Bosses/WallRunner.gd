@@ -106,3 +106,6 @@ func _on_hitbox_area_entered(area: Area2D) -> void:
 			player.bounce_off()
 		else:
 			player.damage()
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

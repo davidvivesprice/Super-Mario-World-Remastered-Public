@@ -13,6 +13,7 @@ var sinking := false
 @onready var starting_y = global_position.y
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	pass
 
 func _physics_process(delta: float) -> void:

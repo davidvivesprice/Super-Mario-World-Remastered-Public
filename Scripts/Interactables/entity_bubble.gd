@@ -17,6 +17,7 @@ var hori_speed := 25
 @onready var starting_y := global_position.y
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	goomba_sprite.visible = item == 0
 	bob_omb_sprite.visible = item == 1
 	mushroom_sprite.visible = item == 2

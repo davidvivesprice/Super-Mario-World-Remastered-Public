@@ -9,3 +9,6 @@ func _physics_process(delta: float) -> void:
 	velocity.y += 15
 	velocity.x = move_speed * direction
 	move_and_slide()
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

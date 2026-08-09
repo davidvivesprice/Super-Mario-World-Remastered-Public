@@ -58,3 +58,6 @@ func damage() -> void:
 		die()
 	else:
 		$StateMachine.transition_to("Hurt")
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

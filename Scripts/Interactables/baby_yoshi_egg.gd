@@ -15,6 +15,7 @@ var can_hatch := false
 var hatched := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	sprite.texture = egg_textures[colour]
 
 func _physics_process(delta: float) -> void:

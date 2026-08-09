@@ -9,6 +9,7 @@ var sinking := false
 var tilemap: TileMap = null
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	for i in get_children():
 		if i is Area2D:
 			hitbox = i

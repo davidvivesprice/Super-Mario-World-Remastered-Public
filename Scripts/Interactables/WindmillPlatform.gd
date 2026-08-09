@@ -4,5 +4,6 @@ extends Node2D
 @onready var spin: Node2D = $Spin
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	if direction == -1:
 		$AnimationPlayer.play_backwards("Spin")

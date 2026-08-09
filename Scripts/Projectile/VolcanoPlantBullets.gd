@@ -10,6 +10,7 @@ var fall_speed := 35
 var falling := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	await get_tree().create_timer(1, false).timeout
 	falling = true
 	await get_tree().create_timer(6, false).timeout

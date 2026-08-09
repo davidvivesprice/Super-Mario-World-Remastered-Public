@@ -11,6 +11,7 @@ var direction := 1
 
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	await get_tree().physics_frame
 	global_position.x += 8 * direction
 	SoundManager.play_sfx(SoundManager.fire_breath, self)

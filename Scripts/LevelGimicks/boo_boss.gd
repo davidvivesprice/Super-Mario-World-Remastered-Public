@@ -17,6 +17,7 @@ var chasing := false
 var dead := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	await get_tree().create_timer(1, false).timeout
 	animations.play("Appear")
 	await animations.animation_finished

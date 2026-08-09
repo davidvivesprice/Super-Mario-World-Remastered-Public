@@ -84,6 +84,7 @@ var can_die := false
 var velocity_lerp := Vector2.ZERO
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	can_die = false
 	can_player_hit = false
 	spawn()

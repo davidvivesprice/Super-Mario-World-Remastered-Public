@@ -12,3 +12,6 @@ func spawn_fire() -> void:
 	node.global_position = global_position - Vector2(6, 14)
 	add_sibling(node)
 	SoundManager.play_sfx(SoundManager.boss_flame, self)
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

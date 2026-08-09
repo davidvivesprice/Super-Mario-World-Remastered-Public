@@ -11,3 +11,6 @@ func _physics_process(delta: float) -> void:
 	var swish_x = (starting_position.x + sin(swish) * 96) + 32
 	var swish_y = starting_position.y + (cos(swish * 2) * 48)
 	global_position = Vector2(swish_x, swish_y)
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

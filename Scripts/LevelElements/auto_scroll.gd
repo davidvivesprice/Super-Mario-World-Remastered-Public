@@ -14,6 +14,7 @@ func _exit_tree() -> void:
 	GameManager.autoscrolling = false
 
 func _ready() -> void:
+	add_to_group("slowmo_autoscroll")   # slow-mo halves scroll_speed instead of freezing the camera
 	if SettingsManager.settings_file.disable_auto_scroll == true:
 		# Autoscroll disabled (couch-co-op mercy setting): never take over the
 		# camera or mark the level as autoscrolling; leave the walls inert.

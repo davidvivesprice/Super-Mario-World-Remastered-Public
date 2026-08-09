@@ -60,3 +60,6 @@ func lava_enter() -> void:
 		SoundManager.play_sfx(SoundManager.boss_flame, self)
 		SoundManager.play_sfx(SoundManager.boss_burn, self)
 	states.transition_to("LavaHurt")
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

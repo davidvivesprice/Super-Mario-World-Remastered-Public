@@ -8,6 +8,7 @@ var can_drop := false
 var moving := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	$Timer.wait_time = time - 1
 	$Numbers.play(str(time))
 

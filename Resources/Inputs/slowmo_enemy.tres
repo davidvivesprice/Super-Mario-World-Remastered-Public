@@ -1,5 +1,5 @@
 [gd_resource type="InputEventJoypadButton" format=3]
 
 [resource]
-button_index = 7
+button_index = 9
 pressed = true

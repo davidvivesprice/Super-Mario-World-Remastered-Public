@@ -17,3 +17,6 @@ func spawn_torpedo() -> void:
 	node.global_position = global_position + Vector2(0, 16)
 	node.direction = direction
 	add_sibling(node) 
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

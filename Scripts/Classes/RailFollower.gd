@@ -42,6 +42,7 @@ signal destination_point_reached
 
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	pass
 
 func _process(delta: float) -> void:

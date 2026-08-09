@@ -8,6 +8,7 @@ const length := 80
 var player: Player = null
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	for i in boos:
 		i.play(str(randi_range(1, 3)))
 

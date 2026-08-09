@@ -3,6 +3,7 @@ extends Node2D
 @export var offset := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	if offset:
 		$AnimationPlayer.stop()
 		await get_tree().create_timer(2.5, false).timeout

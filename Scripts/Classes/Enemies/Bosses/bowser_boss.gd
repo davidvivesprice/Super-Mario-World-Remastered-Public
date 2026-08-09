@@ -130,3 +130,6 @@ func remove_mecha_koopas() -> void:
 		if i is HeldObject or i is Enemy:
 			ParticleManager.summon_particle(ParticleManager.PUFF_SPR, i.global_position - Vector2(0, 8))
 			i.queue_free()
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

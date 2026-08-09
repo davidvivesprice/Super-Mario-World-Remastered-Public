@@ -12,3 +12,6 @@ func summon_fire(fire_position := Vector2.ZERO) -> void:
 	node.global_position = fire_position
 	ParticleManager.summon_particle(ParticleManager.PUFF, fire_position - Vector2(0, 8))
 	add_sibling(node) 
+
+func _enter_tree() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target

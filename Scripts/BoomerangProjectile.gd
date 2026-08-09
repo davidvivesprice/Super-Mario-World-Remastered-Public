@@ -11,6 +11,7 @@ var direction := 1
 @onready var sprite: Sprite2D = $Sprite
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	velocity.x = move_speed * direction
 	await get_tree().create_timer(1.5, false).timeout
 	returning = true

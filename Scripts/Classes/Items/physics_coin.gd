@@ -12,6 +12,7 @@ var can_launch := true
 var can_bounce := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	if silver:
 		$Sprite.play("Silver")
 	else:

@@ -10,6 +10,7 @@ var can_move := true
 var player_in_area := false
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	spawn_boos()
 	for i in get_children():
 		if i is CollisionShape2D:

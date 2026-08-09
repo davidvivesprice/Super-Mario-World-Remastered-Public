@@ -31,6 +31,7 @@ const yoshi_arm_2_orange := Color("b82800")
 var first_ride := true
 
 func _ready() -> void:
+	add_to_group("slowmo_world")   # slow-mo powerup target
 	yoshi_amount += 1
 
 func _exit_tree() -> void:
