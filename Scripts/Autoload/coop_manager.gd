@@ -214,7 +214,7 @@ func _process(delta: float) -> void:
 	# physics callback, positions written from idle - because that is the one
 	# camera empirically smooth in this engine build. (Streak history: idle
 	# cams w/o interpolation smeared; physics-tick writes still smeared.)
-	handle_splitscreen()
+	handle_splitscreen(delta)
 	handle_camera(delta)
 	handle_offscreen_icons()
 
@@ -449,7 +449,7 @@ var split_divider: ColorRect = null
 func get_split_mode() -> int:
 	return int(SettingsManager.settings_file.get("coop_split_mode", 0))
 
-func handle_splitscreen() -> void:
+func handle_splitscreen(delta: float) -> void:
 	var desired = compute_split_layout()   # null, or {vertical, seats}
 	if desired == null:
 		if split_built:
@@ -465,7 +465,7 @@ func handle_splitscreen() -> void:
 		build_split_2p(desired)
 		SoundManager.play_ui_sound(SoundManager.select)
 	if split_built:
-		update_split_cameras()
+		update_split_cameras(delta)
 
 ## The two co-op bodies to frame, as [{seat, node}, ...] - alive seats first.
 func get_split_pair() -> Array:
@@ -550,6 +550,7 @@ func build_split_2p(layout: Dictionary) -> void:
 		var sv := SubViewport.new()
 		sv.size = Vector2i(cell)
 		sv.world_2d = ViewRoot.view.world_2d
+		sv.snap_2d_transforms_to_pixel = true   # same as GameView - keeps 1px lines 1px
 		sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		var cam := Camera2D.new()
 		# SMBX rule: rigid center-lock, no smoothing, no deadzone.
@@ -619,18 +620,11 @@ func teardown_splitscreen() -> void:
 			coop_camera.global_position = (pair[0].node.global_position + pair[1].node.global_position) / 2.0
 			coop_camera.reset_smoothing()
 
-func update_split_cameras() -> void:
+func update_split_cameras(delta: float) -> void:
 	if not is_instance_valid(GameManager.current_level):
 		return
 	var limit_right: int = GameManager.current_level.camera_left_end_position
 	var limit_top: int = GameManager.current_level.camera_top_end_position + 16
-	var pair := get_split_pair()
-	var avg := Vector2.ZERO
-	for p in pair:
-		avg += (p.node as Node2D).global_position
-	if pair.size() > 0:
-		avg /= pair.size()
-	var view: Vector2 = ViewRoot.view.get_visible_rect().size
 	for i in split_cameras.size():
 		var cam := split_cameras[i]
 		if not is_instance_valid(cam):
@@ -647,14 +641,20 @@ func update_split_cameras() -> void:
 			target = get_first_alive_player()
 		if target == null:
 			continue
-		# SMBX perpendicular pinning: rigid player-lock along the split axis,
-		# shared two-player average on the other axis (clamped to 25% of the
-		# half's size) so both halves stay visually continuous.
-		var pos := target.global_position
-		if split_vertical:
-			pos.y = clampf(avg.y, target.global_position.y - view.y * 0.25, target.global_position.y + view.y * 0.25)
+		# Each pane tracks its OWN player on both axes (the SMBX shared-average
+		# pinning made both halves bob with either player's jumps - nauseating,
+		# per David). Rigid on the split axis, smoothed on the perpendicular
+		# one so jumps don't bounce the whole view.
+		var desired := target.global_position
+		var pos := cam.global_position
+		if split_fresh:
+			pos = desired
+		elif split_vertical:
+			pos.x = desired.x
+			pos.y = lerpf(pos.y, desired.y, minf(delta * 8.0, 1.0))
 		else:
-			pos.x = clampf(avg.x, target.global_position.x - view.x * 0.25, target.global_position.x + view.x * 0.25)
+			pos.y = desired.y
+			pos.x = lerpf(pos.x, desired.x, minf(delta * 8.0, 1.0))
 		cam.global_position = pos
 		if split_fresh:
 			# first placement is a teleport, not motion - don't let the
