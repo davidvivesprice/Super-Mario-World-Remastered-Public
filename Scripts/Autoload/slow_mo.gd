@@ -27,7 +27,7 @@ const MUSIC_PITCH := 0.85
 
 const SFX_IN := preload("res://Assets/Audio/SFX/slowmo_in.wav")
 const SFX_OUT := preload("res://Assets/Audio/SFX/slowmo_out.wav")
-const FILM_SHADER := preload("res://Shaders/technicolor_film.gdshader")
+const FILM_SHADER := preload("res://Shaders/technicolor_film_view.gdshader")
 const FILM_LUT := preload("res://Assets/Shaders/cmyk-16.png")
 const FILM_NOISE := preload("res://Assets/Shaders/film_noise1.png")
 
@@ -38,40 +38,46 @@ var _area_cache := {}           # CollisionObject2D -> original disable_mode
 var _root_cache := {}           # enrolled body root -> original disable_mode
 var _scroll_cache := {}         # auto_scroll node -> original scroll_speed
 var _pitch_fx: AudioEffectPitchShift = null
-var _film: ColorRect = null
 var _film_mat: ShaderMaterial = null
 var _film_strength := 0.0
+var _film_applied := false
+var _saved_material: Material = null
 
 func _ready() -> void:
-	var layer := CanvasLayer.new()
-	layer.layer = 3   # above split panes (1) + meters (2), below GameManager UI (5)
-	add_child(layer)
-	_film = ColorRect.new()
-	_film.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# The film look is applied as ViewRoot's material - the same mount that
+	# renders cleanEdge in Smooth mode, i.e. the one shader path PROVEN to
+	# draw on this renderer. (Screen-texture overlay CanvasLayers silently
+	# didn't render here - the v11 vignette and the first technicolor mount
+	# both failed the same way.)
 	_film_mat = ShaderMaterial.new()
 	_film_mat.shader = FILM_SHADER
 	_film_mat.set_shader_parameter("lut_tex", FILM_LUT)
 	_film_mat.set_shader_parameter("noise_tex", FILM_NOISE)
 	_film_mat.set_shader_parameter("strength", 0.0)
-	_film.material = _film_mat
-	layer.add_child(_film)
-	_film.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_film.visible = false
 
 func _process(delta: float) -> void:
 	var target := 1.0 if active_seat >= 0 else 0.0
 	_film_strength = move_toward(_film_strength, target, delta * 2.0)
 	_film_mat.set_shader_parameter("strength", _film_strength)
-	_film.visible = _film_strength > 0.01
+	if _film_strength > 0.01 and not _film_applied:
+		_saved_material = ViewRoot.material
+		ViewRoot.material = _film_mat
+		_film_applied = true
+	elif _film_strength <= 0.01 and _film_applied:
+		ViewRoot.material = _saved_material
+		_saved_material = null
+		_film_applied = false
+		ViewRoot._style_applied = -1   # let ViewRoot re-assert the Screen Style
 
 func _physics_process(delta: float) -> void:
 	if active_seat == -1 and _gameplay_ok():
 		_poll_hold(delta)
 	if active_seat >= 0:
 		time_left -= delta
-		if time_left <= 0.0 or not _gameplay_ok():
+		_poll_owner_exit(delta)
+		if active_seat >= 0 and (time_left <= 0.0 or not _gameplay_ok()):
 			_end_effect()
-		else:
+		elif active_seat >= 0:
 			_freeze_tick()
 
 func _gameplay_ok() -> bool:
@@ -106,10 +112,28 @@ func _poll_hold(delta: float) -> void:
 		else:
 			hold_time[seat] = 0.0
 
+## Only the player who fired the effect may cancel it early - a short
+## bumper hold (~0.25 s) so a stray tap mid-jump doesn't eat the powerup.
+func _poll_owner_exit(delta: float) -> void:
+	var seat := active_seat
+	var node = CoopManager.alive_players.get(seat)
+	if not is_instance_valid(node):
+		return
+	var held := Input.is_action_pressed(CoopManager.get_player_input_str("slowmo_enemy", seat)) 		or Input.is_action_pressed(CoopManager.get_player_input_str("slowmo_world", seat))
+	# reuse hold_time, but only once the fire-hold has been released first
+	if held and hold_time[seat] >= 0.0:
+		hold_time[seat] += delta
+		if hold_time[seat] >= 0.25:
+			hold_time[seat] = -1.0
+			_end_effect()
+	elif not held:
+		hold_time[seat] = 0.0
+
 func _start_effect(seat: int) -> void:
 	active_seat = seat
 	time_left = EFFECT_SECONDS
-	CoopManager.slowmo_charge[seat] = 0.0   # the bar is spent, recharge fresh
+	hold_time[seat] = -1.0   # ignore the still-held fire press until released
+	CoopManager.slowmo_charge[seat] = 0.0   # the bar is spent, recharge fresh - no extension mechanics
 	SoundManager.play_ui_sound(SFX_IN)
 	_music_pitch(MUSIC_PITCH)
 	_slow_autoscrollers(true)
