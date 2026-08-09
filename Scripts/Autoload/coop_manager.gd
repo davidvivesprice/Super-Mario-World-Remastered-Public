@@ -187,9 +187,15 @@ func _process(delta: float) -> void:
 	camera_distance_zoom_enabled = SettingsManager.settings_file.get("coop_camera_zoom", true)
 	rejoin_cooldown = maxf(rejoin_cooldown - delta, 0.0)
 	handle_dropout(delta)
-	handle_splitscreen()
 	handle_camera(delta)
 	handle_offscreen_icons()
+
+func _physics_process(_delta: float) -> void:
+	# Split decisions and pane-camera moves run on the physics tick: the pane
+	# cameras are physics-interpolated like every hand-tuned camera in this
+	# project, and interpolated nodes must be moved from physics, not idle,
+	# or the view smears on motion (the "light streaking" bug).
+	handle_splitscreen()
 
 ## --- Pop-in / pop-out (drop-in co-op) --------------------------------------
 ## Mid-level: a pad nobody is using joins on any button press (floats in as a
@@ -406,6 +412,7 @@ func reset_values() -> void:
 ## 3-4P stays shared screen + zoom + off-screen icons, same as TheXTech.
 
 var split_built := false
+var split_fresh := false             # just built: needs a teleport-reset
 var split_vertical := false          # true = side-by-side, false = stacked
 var split_cameras: Array[Camera2D] = []
 var split_seats: Array[int] = []     # seat id per cell, locked at split time
@@ -518,9 +525,14 @@ func build_split_2p(layout: Dictionary) -> void:
 		sv.world_2d = get_viewport().world_2d
 		sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		var cam := Camera2D.new()
-		# SMBX rule: rigid center-lock, no smoothing, no deadzone
+		# SMBX rule: rigid center-lock, no smoothing, no deadzone.
+		# Same interpolation recipe as the project's CoopCamera / player cams
+		# (physics callback + interpolation ON) - without it the pane view
+		# smears against the interpolated sprites while moving.
 		cam.offset = Vector2(0, -16)
 		cam.position_smoothing_enabled = false
+		cam.process_callback = Camera2D.CAMERA2D_PROCESS_PHYSICS
+		cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 		cam.limit_left = -64
 		cam.limit_bottom = 64
 		sv.add_child(cam)
@@ -554,6 +566,7 @@ func build_split_2p(layout: Dictionary) -> void:
 		i.visible = false
 	splitscreen = true
 	split_built = true
+	split_fresh = true
 
 func teardown_splitscreen() -> void:
 	split_built = false
@@ -616,6 +629,12 @@ func update_split_cameras() -> void:
 		else:
 			pos.x = clampf(avg.x, target.global_position.x - view.x * 0.25, target.global_position.x + view.x * 0.25)
 		cam.global_position = pos
+		if split_fresh:
+			# first placement is a teleport, not motion - don't let the
+			# interpolator smear the pane from its spawn transform
+			cam.reset_physics_interpolation()
+	if split_fresh:
+		split_fresh = false
 
 func handle_distance_zoom(delta: float) -> void:
 	var player_dists = []
