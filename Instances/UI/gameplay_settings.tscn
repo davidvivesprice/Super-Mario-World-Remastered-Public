@@ -164,3 +164,10 @@ node_title = "Speedometer"
 selectable_values = [false, true]
 value_colours = Array[Color]([Color(1, 0.194376, 0.144153, 1), Color(0.345098, 0.972549, 0.345098, 1)])
 settings_value = "speedometer"
+
+[node name="SlowmoLook" parent="VBoxContainer" instance=ExtResource("2_xgdys")]
+layout_mode = 2
+node_title = "Slow-Mo Look"
+option_value_usage = 1
+selectable_values = ["Film the Slowed", "Film Everything"]
+settings_value = "slowmo_look"

@@ -79,6 +79,7 @@ var settings_template := {
 	"coop_split_mode": 0, # 0 = dynamic (split when apart), 1 = always split, 2 = single screen
 	"screen_style": 1, # 0 = smooth/modern (cleanEdge), 1 = classic pixels (David's verdict: cleanEdge melts SMW's 16-bit art)
 	"slowmo_powerups": true,
+	"slowmo_look": 0, # 0 = film the slowed sprites only, 1 = film the whole screen
 	"speedometer": false, # live px/s next to the slow-mo meter (David: run-feel debugging)
 	"fast_map_unlock_speed": false,
 	"show_level_start_text": true,

@@ -28,6 +28,7 @@ const MUSIC_PITCH := 0.85
 const SFX_IN := preload("res://Assets/Audio/SFX/slowmo_in.wav")
 const SFX_OUT := preload("res://Assets/Audio/SFX/slowmo_out.wav")
 const FILM_SHADER := preload("res://Shaders/technicolor_film_view.gdshader")
+const SPRITE_SHADER := preload("res://Shaders/technicolor_sprite.gdshader")
 const FILM_LUT := preload("res://Assets/Shaders/cmyk-16.png")
 const FILM_NOISE := preload("res://Assets/Shaders/film_noise1.png")
 
@@ -39,9 +40,16 @@ var _root_cache := {}           # enrolled body root -> original disable_mode
 var _scroll_cache := {}         # auto_scroll node -> original scroll_speed
 var _pitch_fx: AudioEffectPitchShift = null
 var _film_mat: ShaderMaterial = null
+var _sprite_mat: ShaderMaterial = null
+var _sprited: Array = []        # sprites we gave the film-sprite material
 var _film_strength := 0.0
 var _film_applied := false
 var _saved_material: Material = null
+
+## Slow-Mo Look setting: 0 = film only the slowed sprites (wild), 1 = film
+## the whole screen. Live-switchable in Gameplay settings.
+func _look() -> int:
+	return int(SettingsManager.settings_file.get("slowmo_look", 0))
 
 func _ready() -> void:
 	# The film look is applied as ViewRoot's material - the same mount that
@@ -54,16 +62,22 @@ func _ready() -> void:
 	_film_mat.set_shader_parameter("lut_tex", FILM_LUT)
 	_film_mat.set_shader_parameter("noise_tex", FILM_NOISE)
 	_film_mat.set_shader_parameter("strength", 0.0)
+	_sprite_mat = ShaderMaterial.new()
+	_sprite_mat.shader = SPRITE_SHADER
+	_sprite_mat.set_shader_parameter("lut_tex", FILM_LUT)
+	_sprite_mat.set_shader_parameter("strength", 0.0)
 
 func _process(delta: float) -> void:
 	var target := 1.0 if active_seat >= 0 else 0.0
 	_film_strength = move_toward(_film_strength, target, delta * 2.0)
 	_film_mat.set_shader_parameter("strength", _film_strength)
-	if _film_strength > 0.01 and not _film_applied:
+	_sprite_mat.set_shader_parameter("strength", _film_strength)
+	var want_fullscreen := _look() == 1 and _film_strength > 0.01
+	if want_fullscreen and not _film_applied:
 		_saved_material = ViewRoot.material
 		ViewRoot.material = _film_mat
 		_film_applied = true
-	elif _film_strength <= 0.01 and _film_applied:
+	elif not want_fullscreen and _film_applied:
 		ViewRoot.material = _saved_material
 		_saved_material = null
 		_film_applied = false
@@ -183,6 +197,12 @@ func _harden(e: Node) -> void:
 		if not _area_cache.has(child):
 			_area_cache[child] = child.disable_mode
 			child.disable_mode = CollisionObject2D.DISABLE_MODE_KEEP_ACTIVE
+	if _look() == 0:
+		# the slowed get trapped in old film: grade their sprites only
+		for s in e.find_children("*", "Sprite2D", true, false) + e.find_children("*", "AnimatedSprite2D", true, false):
+			if s.material == null:
+				s.material = _sprite_mat
+				_sprited.append(s)
 
 func _thaw_all() -> void:
 	for e in get_tree().get_nodes_in_group("slowmo_world"):
@@ -201,6 +221,10 @@ func _thaw_all() -> void:
 		if is_instance_valid(child):
 			child.disable_mode = _area_cache[child]
 	_area_cache.clear()
+	for s in _sprited:
+		if is_instance_valid(s) and s.material == _sprite_mat:
+			s.material = null
+	_sprited.clear()
 
 ## Auto-scroll owns the live camera + kill walls - frame-freezing it would
 ## stutter the camera for everyone. Halve its speed instead.

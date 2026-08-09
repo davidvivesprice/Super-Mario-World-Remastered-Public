@@ -28,9 +28,21 @@ func _ready() -> void:
 	right.texture = tex
 	right.stretch_mode = TextureRect.STRETCH_SCALE
 	right.material = mat
-	right.position = Vector2(240, 0)
-	right.size = Vector2(240, 270)
+	right.position = Vector2(160, 0)
+	right.size = Vector2(160, 270)
 	layer.add_child(right)
+	left.size = Vector2(160, 270)
+	var smat := ShaderMaterial.new()
+	smat.shader = preload("res://Shaders/technicolor_sprite.gdshader")
+	smat.set_shader_parameter("lut_tex", tex)
+	smat.set_shader_parameter("strength", 1.0)
+	var third := TextureRect.new()
+	third.texture = tex
+	third.stretch_mode = TextureRect.STRETCH_SCALE
+	third.material = smat
+	third.position = Vector2(320, 0)
+	third.size = Vector2(160, 270)
+	layer.add_child(third)
 	_snap()
 
 func _snap() -> void:
