@@ -67,11 +67,26 @@ func _ready() -> void:
 	_sprite_mat.set_shader_parameter("lut_tex", FILM_LUT)
 	_sprite_mat.set_shader_parameter("strength", 0.0)
 
+## What the split panes should wear right now: the full-screen film while a
+## Film Everything effect runs (panes ARE the screen during split - without
+## this the shader vanished the moment the screen split), else Screen Style.
+## Look 0 grades per-sprite materials, which already render inside panes.
+func pane_look_material() -> Material:
+	if _look() == 1 and _film_strength > 0.01:
+		return _film_mat
+	return ViewRoot.pane_material()
+
+func _sync_pane_materials() -> void:
+	for svc in CoopManager.split_containers:
+		if is_instance_valid(svc):
+			svc.material = pane_look_material()
+
 func _process(delta: float) -> void:
 	var target := 1.0 if active_seat >= 0 else 0.0
 	_film_strength = move_toward(_film_strength, target, delta * 2.0)
 	_film_mat.set_shader_parameter("strength", _film_strength)
 	_sprite_mat.set_shader_parameter("strength", _film_strength)
+	_sync_pane_materials()
 	var want_fullscreen := _look() == 1 and _film_strength > 0.01
 	if want_fullscreen and not _film_applied:
 		_saved_material = ViewRoot.material

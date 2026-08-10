@@ -443,6 +443,8 @@ var split_seats: Array[int] = []     # seat id per cell, locked at split time
 var split_grid: GridContainer = null
 var split_backdrop: ColorRect = null
 var split_divider: ColorRect = null
+var split_containers := []          # the two pane SubViewportContainers
+var _parallax_cache := {}           # Parallax2D -> original repeat_times
 
 ## Screen modes, TheXTech-style: 0 = Dynamic (split only when apart),
 ## 1 = Always Split (stacked halves full-time), 2 = Single Screen (never).
@@ -506,20 +508,43 @@ func compute_split_layout():
 		return {"vertical": false, "seats": seats}
 	var view: Vector2 = ViewRoot.view.get_visible_rect().size
 	var level = GameManager.current_level
-	# level rect from the same limits the cameras use
-	var sec_w: float = float(level.camera_left_end_position) - (-64.0)
-	var sec_h: float = 64.0 - float(level.camera_top_end_position + 16)
+	var sec_left := -64.0
+	var sec_right := float(level.camera_left_end_position)
+	var sec_top := float(level.camera_top_end_position + 16)
+	var sec_bottom := 64.0
 	var p0: Vector2 = pair[0].node.global_position
 	var p1: Vector2 = pair[1].node.global_position
 	# never split along an axis the level isn't bigger than the screen on
-	var can_lr := sec_w > view.x
-	var can_tb := sec_h > view.y
-	if can_lr and absf(p0.x - p1.x) >= view.x * 0.5:
-		var seats := [pair[0].seat, pair[1].seat] if p0.x <= p1.x else [pair[1].seat, pair[0].seat]
-		return {"vertical": true, "seats": seats}
-	if can_tb and absf(p0.y - p1.y) >= view.y * 0.5:
-		var seats := [pair[0].seat, pair[1].seat] if p0.y <= p1.y else [pair[1].seat, pair[0].seat]
-		return {"vertical": false, "seats": seats}
+	var can_lr := (sec_right - sec_left) > view.x
+	var can_tb := (sec_bottom - sec_top) > view.y
+	# SMBX's actual rule, in SCREEN space of the real (clamped) shared camera:
+	# split when a player crosses the 75%/25% line while the other player is
+	# far enough from that side's level edge that an edge-clamped camera could
+	# not show both. Because the 75% line IS the new pane's center, the cut is
+	# seamless - nobody teleports across the screen (David's death report).
+	var cam_c: Vector2 = coop_camera.get_screen_center_position()
+	var sx0 := (p0.x - (cam_c.x - view.x * 0.5)) / view.x
+	var sx1 := (p1.x - (cam_c.x - view.x * 0.5)) / view.x
+	var sy0 := (p0.y - (cam_c.y - view.y * 0.5)) / view.y
+	var sy1 := (p1.y - (cam_c.y - view.y * 0.5)) / view.y
+	if can_lr:
+		if sx1 >= 0.75 and p0.x < sec_right - view.x * 0.75:
+			return {"vertical": true, "seats": [pair[0].seat, pair[1].seat]}
+		if sx0 >= 0.75 and p1.x < sec_right - view.x * 0.75:
+			return {"vertical": true, "seats": [pair[1].seat, pair[0].seat]}
+		if sx1 <= 0.25 and p0.x > sec_left + view.x * 0.75:
+			return {"vertical": true, "seats": [pair[1].seat, pair[0].seat]}
+		if sx0 <= 0.25 and p1.x > sec_left + view.x * 0.75:
+			return {"vertical": true, "seats": [pair[0].seat, pair[1].seat]}
+	if can_tb:
+		if sy1 >= 0.75 and p0.y < sec_bottom - view.y * 0.75:
+			return {"vertical": false, "seats": [pair[0].seat, pair[1].seat]}
+		if sy0 >= 0.75 and p1.y < sec_bottom - view.y * 0.75:
+			return {"vertical": false, "seats": [pair[1].seat, pair[0].seat]}
+		if sy1 <= 0.25 and p0.y > sec_top + view.y * 0.75:
+			return {"vertical": false, "seats": [pair[1].seat, pair[0].seat]}
+		if sy0 <= 0.25 and p1.y > sec_top + view.y * 0.75:
+			return {"vertical": false, "seats": [pair[0].seat, pair[1].seat]}
 	return null
 
 func build_split_2p(layout: Dictionary) -> void:
@@ -544,9 +569,11 @@ func build_split_2p(layout: Dictionary) -> void:
 		var svc := SubViewportContainer.new()
 		svc.stretch = true
 		svc.custom_minimum_size = cell
-		# panes must match the main view's Screen Style (cleanEdge or nearest)
-		svc.material = ViewRoot.pane_material()
+		# panes must match the main view's look: Screen Style normally, the
+		# slow-mo film grade while an effect is running
+		svc.material = SlowMo.pane_look_material()
 		svc.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		split_containers.append(svc)
 		var sv := SubViewport.new()
 		sv.size = Vector2i(cell)
 		sv.world_2d = ViewRoot.view.world_2d
@@ -592,6 +619,12 @@ func build_split_2p(layout: Dictionary) -> void:
 
 	for i in off_screen_icons:
 		i.visible = false
+	# widen Parallax2D repeat coverage so pane views far from the shared
+	# camera still have background tiles (single-transform limitation)
+	for par in GameManager.current_level.find_children("*", "Parallax2D", true, false):
+		if not _parallax_cache.has(par):
+			_parallax_cache[par] = par.repeat_times
+			par.repeat_times = maxi(par.repeat_times, 3)
 	splitscreen = true
 	split_built = true
 	split_fresh = true
@@ -606,6 +639,11 @@ func teardown_splitscreen() -> void:
 			cam.enabled = false
 	split_cameras.clear()
 	split_seats = []
+	split_containers.clear()
+	for par in _parallax_cache.keys():
+		if is_instance_valid(par):
+			par.repeat_times = _parallax_cache[par]
+	_parallax_cache.clear()
 	for n in [split_grid, split_backdrop, split_divider]:
 		if is_instance_valid(n):
 			n.queue_free()
