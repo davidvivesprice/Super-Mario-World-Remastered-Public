@@ -698,6 +698,13 @@ func update_split_cameras(delta: float) -> void:
 			# first placement is a teleport, not motion - don't let the
 			# interpolator smear the pane from its spawn transform
 			cam.reset_physics_interpolation()
+			# ...and PUSH the view now. With physics interpolation on, setting
+			# position doesn't update the viewport (engine guard skips it) and
+			# a camera born mid-frame gets no process tick until next frame -
+			# without this the pane renders 1-3 frames pinned at the camera's
+			# limit corner (David's split flash, confirmed frame-by-frame).
+			# Order matters: position -> reset interpolation -> force scroll.
+			cam.force_update_scroll()
 	if split_fresh:
 		split_fresh = false
 
