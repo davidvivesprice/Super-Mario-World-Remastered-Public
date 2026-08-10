@@ -590,6 +590,20 @@ func build_split_2p(layout: Dictionary) -> void:
 		cam.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 		cam.limit_left = -64
 		cam.limit_bottom = 64
+		# configure FULLY before entering the tree: the engine pushes a canvas
+		# transform from the camera's add-time state (ENTER_TREE cascade), so
+		# limits and position must already be correct or the pane's first
+		# frame renders the stale seed (the split flash's root)
+		cam.limit_right = GameManager.current_level.camera_left_end_position
+		cam.limit_top = GameManager.current_level.camera_top_end_position + 16
+		var seat_i: int = split_seats[i]
+		var seed_target: Node2D = null
+		if alive_players.has(seat_i) and is_instance_valid(alive_players[seat_i]):
+			seed_target = alive_players[seat_i]
+		elif active_players.has(seat_i) and is_instance_valid(active_players[seat_i]):
+			seed_target = active_players[seat_i]
+		if seed_target != null:
+			cam.global_position = seed_target.global_position
 		sv.add_child(cam)
 		svc.add_child(sv)
 		split_grid.add_child(svc)
@@ -678,6 +692,10 @@ func update_split_cameras(delta: float) -> void:
 		if target == null:
 			target = get_first_alive_player()
 		if target == null:
+			if split_fresh:
+				# even with no target, never leave the fresh cam un-pushed
+				cam.reset_physics_interpolation()
+				cam.force_update_scroll()
 			continue
 		# Each pane tracks its OWN player on both axes (the SMBX shared-average
 		# pinning made both halves bob with either player's jumps - nauseating,
